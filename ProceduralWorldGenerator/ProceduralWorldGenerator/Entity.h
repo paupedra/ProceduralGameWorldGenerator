@@ -3,8 +3,19 @@
 
 struct SDL_Renderer;
 
-struct Color
+class Color
 {
+public:
+	Color() {}
+
+	Color(int r, int g, int b) :
+		r(r),
+		g(g),
+		b(b)
+	{
+
+	}
+
 	int r = 0, g = 0, b = 0;
 };
 

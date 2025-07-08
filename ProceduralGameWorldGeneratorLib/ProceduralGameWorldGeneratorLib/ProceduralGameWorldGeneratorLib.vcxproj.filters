@@ -16,6 +16,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProceduralGameWorldGenerator.h" />
+    <ClInclude Include="stb_perlin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProceduralGameWorldGenerator.cpp" />

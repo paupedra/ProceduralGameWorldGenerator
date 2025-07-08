@@ -8,8 +8,20 @@ struct SDL_Renderer;
 
 class Application
 {
-
 public:
+	// defines an class operation that lets clients access its unique instance.
+	static Application& get() {
+		// may be responsible for creating its own unique instance.
+		if (nullptr == instance) instance = new Application;
+		return *instance;
+	}
+	Application(const Application&) = delete; // rule of three
+	Application& operator=(const Application&) = delete;
+	static void destruct() {
+		delete instance;
+		instance = nullptr;
+	}
+
 	bool Init();
 	void PrepareUpdate();
 	bool Update();
@@ -20,11 +32,12 @@ public:
 	void PollEvents();
 	void Render();
 
+	void GetCoordinateFromIndex(int index, int width, int *x, int *y);
+
 	SDL_Window* window = nullptr;
 	SDL_Renderer* renderer = nullptr;
 
 	bool exit = false;
-
 
 	float frameTime = 0.f;
 	float appStartTime = 0.f;
@@ -43,21 +56,27 @@ public:
 	int prevLastSecFrames = 0.f;
 
 	std::vector<Entity> entities;
+	float tileSize = 5;
 
-	//Matrix matrix(3, 3);
-	int matrix[10][10] = 
-	{	{1,0,0,0,0,0,0,0,0,0} , 
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-		{0,0,0,0,0,0,0,0,0,0} ,
-	};
+	////Matrix matrix(3, 3);
+	//int matrix[10][10] = 
+	//{	{1,0,0,0,0,0,0,0,0,0} , 
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//	{0,0,0,0,0,0,0,0,0,0} ,
+	//};
 
-	Position screenPos;
+	Position cameraPosition;
+
+private:
+	Application() = default; // no public constructor
+	~Application() = default; // no public destructor
+	static Application* instance; // declaration class variable
 };
 

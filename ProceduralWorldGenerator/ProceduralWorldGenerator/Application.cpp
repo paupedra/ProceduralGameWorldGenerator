@@ -8,8 +8,6 @@
 
 bool Application::Init()
 {
-	SDL_Init(SDL_INIT_VIDEO);
-
 	window = SDL_CreateWindow("Hello World", 800, 600, SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		SDL_Log("Couldn't create window: %s", SDL_GetError());
@@ -30,21 +28,7 @@ bool Application::Init()
 	SDL_GetRenderOutputSize(renderer, &w, &h);
 	SDL_SetRenderScale(renderer, scale, scale);
 	
-	for (int x = 0; x < 10; ++x)
-	{
-		for (int y = 0; y < 10; ++y)
-		{
-			Entity* entity = new Entity(Position(x * 10, y * 10));
-
-			entity->color.r = SDL_rand(255);
-			entity->color.g = SDL_rand(255);
-			entity->color.b = SDL_rand(255);
-			
-			entities.push_back((*entity));
-		}
-	}
-
-	//SDL_Init(SDL_INIT_VIDEO);
+	GenerateWorld(); //Call Library Here
 
 	return true;
 }
@@ -64,7 +48,7 @@ bool Application::Update()
 
 	PollEvents();
 
-	GenerateWorld();
+	
 
 	Render();
 
@@ -121,7 +105,39 @@ bool Application::ShutDown()
 
 void Application::GenerateWorld()
 {
+	WorldInfoTopView2D topViewWorld;
 
+	topViewWorld.width = 100;
+	topViewWorld.height = 100;
+
+	GenerateTowView2DWorld(topViewWorld, 1);
+
+	entities.clear();
+
+	for (int y = 0; y < topViewWorld.width; ++y)
+	{
+		for (int x = 0; x < topViewWorld.height; ++x)
+		{
+
+			Entity* entity = new Entity(Position(x * tileSize, y * tileSize));
+
+			if (topViewWorld.tiles[x][y].tileId == 1)
+			{
+				entity->color = Color(50, 200, 50);
+			}
+			if (topViewWorld.tiles[x][y].tileId == 2)
+			{
+				entity->color = Color(0, 0, 255);
+			}
+			if (topViewWorld.tiles[x][y].tileId == 3)
+			{
+				entity->color = Color(211, 169, 108);
+			}
+
+			entities.push_back(*entity);
+		}
+		
+	}
 }
 
 void Application::PollEvents()
@@ -135,19 +151,19 @@ void Application::PollEvents()
 		{
 			if (event.key.key == SDLK_RIGHT)
 			{
-				screenPos.x -= 100 * dt;
+				cameraPosition.x -= 100 * dt;
 			}
 			if (event.key.key == SDLK_LEFT)
 			{
-				screenPos.x += 100 * dt;
+				cameraPosition.x += 100 * dt;
 			}
 			if (event.key.key == SDLK_UP)
 			{
-				screenPos.y += 100 * dt;
+				cameraPosition.y += 100 * dt;
 			}
 			if (event.key.key == SDLK_DOWN)
 			{
-				screenPos.y -= 100 * dt;
+				cameraPosition.y -= 100 * dt;
 			}
 		}
 	}
@@ -157,6 +173,12 @@ void Application::Render()
 {
 	for (int i = 0; i < entities.size(); ++i)
 	{
-		entities[i].Render(renderer, screenPos);
+		entities[i].Render(renderer, cameraPosition);
 	}
+}
+
+void Application::GetCoordinateFromIndex(int index, int width, int* x, int* y)
+{
+	*x = index % width;
+	*y = index / width;	
 }

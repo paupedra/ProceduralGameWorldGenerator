@@ -14,17 +14,12 @@ enum class AppState
     EXIT
 };
 
-
-Application* App = nullptr;
-
+Application* Application::instance = nullptr;
 
 static AppState appState;
 
-int SDL_main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-
-    App = new Application();
-
     
     AppState appState = AppState::CREATION;
     
@@ -37,16 +32,19 @@ int SDL_main(int argc, char* argv[])
             break;
         case AppState::INIT:
 
-            App->Init();
+            if (!Application::get().Init())
+            {
+                appState = AppState::EXIT;
+            }
 
 
             appState = AppState::UPDATE;
             break;
         case AppState::UPDATE:
 
-            App->Update();
+            Application::get().Update();
 
-            if (App->exit == true)
+            if (Application::get().exit == true)
             {
                 appState = AppState::SHUTDOWN;
             }
@@ -58,8 +56,8 @@ int SDL_main(int argc, char* argv[])
 
         case AppState::EXIT:
 
-            App->ShutDown();
-
+            Application::get().ShutDown();
+            Application::destruct();
             break;
         }
     
