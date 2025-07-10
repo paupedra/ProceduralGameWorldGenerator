@@ -48,8 +48,6 @@ bool Application::Update()
 
 	PollEvents();
 
-	
-
 	Render();
 
 	FinishUpdate();
@@ -107,10 +105,10 @@ void Application::GenerateWorld()
 {
 	WorldInfoTopView2D topViewWorld;
 
-	topViewWorld.width = 100;
-	topViewWorld.height = 100;
+	topViewWorld.width = 200;
+	topViewWorld.height = 200;
 
-	GenerateTowView2DWorld(topViewWorld, 1);
+	GenerateTowView2DWorld(topViewWorld, SDL_rand(10000000000));
 
 	entities.clear();
 
@@ -119,19 +117,25 @@ void Application::GenerateWorld()
 		for (int x = 0; x < topViewWorld.height; ++x)
 		{
 
-			Entity* entity = new Entity(Position(x * tileSize, y * tileSize));
+			Entity* entity = new Entity(Position(x * tileSize , y * tileSize ));
+			entity->size.x = tileSize;
+			entity->size.y = tileSize;
 
 			if (topViewWorld.tiles[x][y].tileId == 1)
 			{
-				entity->color = Color(50, 200, 50);
+				entity->color = Color(0, 0, 255);
 			}
 			if (topViewWorld.tiles[x][y].tileId == 2)
 			{
-				entity->color = Color(0, 0, 255);
+				entity->color = Color(0, 155, 255);
 			}
 			if (topViewWorld.tiles[x][y].tileId == 3)
 			{
 				entity->color = Color(211, 169, 108);
+			}
+			if (topViewWorld.tiles[x][y].tileId == 4)
+			{
+				entity->color = Color(0, 255, 0);
 			}
 
 			entities.push_back(*entity);
@@ -142,28 +146,42 @@ void Application::GenerateWorld()
 
 void Application::PollEvents()
 {
+
+	// Get the current keyboard state
+	const bool* keyboardState = SDL_GetKeyboardState(NULL);
+
+	// Check key states (for movement, actions, etc.)
+	if (keyboardState[SDL_SCANCODE_RIGHT]) {
+		cameraPosition.x -= cameraSpeed * dt;
+	}
+	if (keyboardState[SDL_SCANCODE_LEFT]) {
+		cameraPosition.x += cameraSpeed * dt;
+	}
+	if (keyboardState[SDL_SCANCODE_UP]) {
+		cameraPosition.y += cameraSpeed * dt;
+	}
+	if (keyboardState[SDL_SCANCODE_DOWN]) {
+		cameraPosition.y -= cameraSpeed * dt;
+	}
+	if (keyboardState[SDL_SCANCODE_KP_8]) {
+		zoom += zoomSpeed * dt;
+	}
+	if (keyboardState[SDL_SCANCODE_KP_2]) {
+		zoom -= zoomSpeed * dt;
+	}
+
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
+
 		if (event.type == SDL_EVENT_QUIT) {
 			exit = true;
 		}
-		if (event.type == SDL_EVENT_KEY_DOWN)
-		{
-			if (event.key.key == SDLK_RIGHT)
-			{
-				cameraPosition.x -= 100 * dt;
-			}
-			if (event.key.key == SDLK_LEFT)
-			{
-				cameraPosition.x += 100 * dt;
-			}
-			if (event.key.key == SDLK_UP)
-			{
-				cameraPosition.y += 100 * dt;
-			}
-			if (event.key.key == SDLK_DOWN)
-			{
-				cameraPosition.y -= 100 * dt;
+		if (event.type == SDL_EVENT_KEY_DOWN) {
+
+			switch (event.key.key) {
+			case SDLK_R:
+				GenerateWorld();
+				break;
 			}
 		}
 	}
@@ -173,7 +191,7 @@ void Application::Render()
 {
 	for (int i = 0; i < entities.size(); ++i)
 	{
-		entities[i].Render(renderer, cameraPosition);
+		entities[i].Render(renderer, cameraPosition, zoom);
 	}
 }
 

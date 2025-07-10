@@ -2,14 +2,14 @@
 #include "Entity.h"
 #include <SDL3/SDL.h>
 
-void Entity::Render(SDL_Renderer* renderer, Position screenPos)
+void Entity::Render(SDL_Renderer* renderer, Position screenPos, float zoom)
 {
 	SDL_FRect rect;
-	rect.h = 9;
-	rect.w = 9;
+	rect.h = size.y * zoom;
+	rect.w = size.x * zoom;
 	
-	rect.x = (position.x + screenPos.x);
-	rect.y = (position.y + screenPos.y);
+	rect.x = (position.x + screenPos.x) * zoom;
+	rect.y = (position.y + screenPos.y) * zoom;
 	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
 	SDL_RenderFillRect(renderer, &rect);
 }

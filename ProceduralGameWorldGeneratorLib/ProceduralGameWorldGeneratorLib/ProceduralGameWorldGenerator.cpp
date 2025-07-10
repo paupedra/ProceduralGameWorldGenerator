@@ -49,9 +49,9 @@ void GenerateTowView2DWorld(WorldInfoTopView2D& info, int seed)
     {
         for (int x = 0; x < info.height; ++x)
         {
-            num = stb_perlin_noise3(x * 0.1, y * 0.1,0,0,0,0);
+            num = stb_perlin_noise3_seed(x * 0.05, y * 0.05,0,0,0,0,seed);
 
-            if (num > 0.2 || num < -0.2)
+            if (num >= 0.2)
                 info.tiles[x][y].tileId = 1;
 
             if (num < 0.2 && num >= 0)
@@ -59,6 +59,8 @@ void GenerateTowView2DWorld(WorldInfoTopView2D& info, int seed)
 
             if (num > -0.2 && num <= 0)
                 info.tiles[x][y].tileId = 3;
+            if (num <= -0.2)
+                info.tiles[x][y].tileId = 4;
         }
     }
 	//Bodies of Water

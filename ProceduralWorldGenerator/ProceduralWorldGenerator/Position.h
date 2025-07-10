@@ -22,6 +22,14 @@ public:
 		return *this;
 	}
 
+	Position& operator*(float i)
+	{
+		x * i;
+		y * i;
+
+		return *this;
+	}
+
 	float x = 0.f;
 	float y = 0.f;
 };

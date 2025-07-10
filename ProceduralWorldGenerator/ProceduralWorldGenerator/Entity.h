@@ -28,11 +28,12 @@ public:
 		
 	}
 
-	void Render(SDL_Renderer* renderer, Position screenPos);
+	void Render(SDL_Renderer* renderer, Position screenPos, float zoom);
 
 	void Move(Position positionVector);
 	void MoveTo(Position newPosition);
 
 	Position position;
+	Position size;
 	Color color;
 };
