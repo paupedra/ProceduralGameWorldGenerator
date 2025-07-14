@@ -1,33 +1,40 @@
 #pragma once
+#ifndef PROCEDURAL_GAME_WORLD_GENERATOR_LIB
+#define PROCEDURAL_GAME_WORLD_GENERATOR_LIB
 
-struct Tile
+typedef struct Tile;
+typedef struct Biome;
+typedef struct WorldInfoFrontSideView2D;
+typedef struct WorldInfoTopView2D;
+
+typedef struct Tile
 {
-	int tileId = 0; //Represents the type of tile
-	int r, g, b = 0; //Used in testing, will usually be a texture
-	int biomeId = 0;
+	int tileId; //Represents the type of tile
+	int r, g, b; //Used in testing, will usually be a texture
+	int biomeId;
 };
 
-struct Biome
+typedef struct Biome
 {
-	int id = 0;
-	float biomeSurfaceVariation = 0; //Specific Biome Surface Variation
+	int id;
+	float biomeSurfaceVariation; //Specific Biome Surface Variation
 };
 
-struct WorldInfoFrontSideView2D
+typedef struct WorldInfoFrontSideView2D
 {
-	Tile tiles[1]; //Tiles present in the world
+	Tile* tiles; //Tiles present in the world
 
-	int width, height = 0; //Width and Height of the map in tiles
+	int width, height; //Width and Height of the map in tiles
 
-	int surfaceAverageHeight = 0; //Average height of the terrain, counting from bottom
-	float surfaceVariation = 0; //Variation in tiles of the surface, this will create higher or lower surface variation
+	int surfaceAverageHeight; //Average height of the terrain, counting from bottom
+	float surfaceVariation; //Variation in tiles of the surface, this will create higher or lower surface variation
 
-	Biome biomes[1];
+	Biome* biomes;
 
 
 };
 
-struct WorldInfoTopView2D
+typedef struct WorldInfoTopView2D
 {
 	Tile** tiles = nullptr; //Tiles present in the world
 
@@ -48,3 +55,5 @@ struct WorldInfoTopView2D
 void GenerateFrontSideView2DWorld(WorldInfoFrontSideView2D& worldInfo, int seed); //Generates 2D world from a Front-Side View
 
 void GenerateTowView2DWorld(WorldInfoTopView2D& info, int seed); //Generates 2D world from a Top View
+
+#endif // PROCEDURAL_GAME_WORLD_GENERATOR_LIB

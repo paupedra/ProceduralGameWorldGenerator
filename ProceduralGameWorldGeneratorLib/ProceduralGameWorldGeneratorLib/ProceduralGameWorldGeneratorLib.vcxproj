@@ -167,7 +167,7 @@
     <ClInclude Include="stb_perlin.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ProceduralGameWorldGenerator.cpp" />
+    <ClCompile Include="ProceduralGameWorldGenerator.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

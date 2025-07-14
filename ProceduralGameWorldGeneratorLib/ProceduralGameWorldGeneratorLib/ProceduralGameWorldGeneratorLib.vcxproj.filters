@@ -21,6 +21,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ProceduralGameWorldGenerator.cpp" />
+    <ClCompile Include="ProceduralGameWorldGenerator.c" />
   </ItemGroup>
 </Project>

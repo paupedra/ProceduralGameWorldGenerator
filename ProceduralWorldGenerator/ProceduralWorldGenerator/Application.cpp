@@ -110,7 +110,7 @@ void Application::GenerateWorld()
 
 	GenerateTowView2DWorld(topViewWorld, SDL_rand(10000000000));
 
-	Uint32 pixels[topViewWorld.width * topViewWorld.height];
+	//Uint32 pixels[topViewWorld.width * topViewWorld.height];
 
 	entities.clear();
 
