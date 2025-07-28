@@ -1,59 +1,67 @@
 #pragma once
-#ifndef PROCEDURAL_GAME_WORLD_GENERATOR_LIB
-#define PROCEDURAL_GAME_WORLD_GENERATOR_LIB
+#include <stdbool.h>
 
-typedef struct Tile;
-typedef struct Biome;
-typedef struct WorldInfoFrontSideView2D;
-typedef struct WorldInfoTopView2D;
+#define MAX_BIOMES 16
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 typedef struct Tile
 {
-	int tileId; //Represents the type of tile
+	int tileId; //Represents the type of final tile
 	int r, g, b; //Used in testing, will usually be a texture
 	int biomeId;
-};
+} Tile;
+
+typedef struct BiomeTile
+{
+	int tileId;
+} BiomeTile;
 
 typedef struct Biome
 {
 	int id;
-	float biomeSurfaceVariation; //Specific Biome Surface Variation
-};
-
-typedef struct WorldInfoFrontSideView2D
-{
-	Tile* tiles; //Tiles present in the world
-
-	int width, height; //Width and Height of the map in tiles
-
-	int surfaceAverageHeight; //Average height of the terrain, counting from bottom
-	float surfaceVariation; //Variation in tiles of the surface, this will create higher or lower surface variation
-
-	Biome* biomes;
 
 
-};
+	//float biomeTerrainElevationVariation; //Specific Biome Elevation Variation
+} Biome;
 
 typedef struct WorldInfoTopView2D
 {
-	Tile** tiles = nullptr; //Tiles present in the world
+	Tile** tiles; //Output: Array of tiles present in the world
+	Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
+	int biomeCount; //Set to 0
 
-	int width, height = 0;
+	int width, height; //Input: Width and Height of the map in tiles
+	int zoom; //Input: Default to 1, sets the zoom for the noise, if the map is bigger a bigger zoom is recommended
 
-	Biome biomes[1];
+	bool assureWaterPercentage; //Wether the generator should assure the percentage will be accurate but will require more processing time
+	float waterPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
+	
+	//bool waterHasElevation; //Weather want to assign elevation to bodies of water
+	//int maxTerrainElevation, minTerrainElevation; //In units maximum and minimum elevation in the whole world
+	//int terrainElevationVariation; //How common it is to have more variation in elevation
+} WorldInfoTopView2D;
 
-	int waterPercent = 50; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
+typedef struct {
+	double zoom;
+	double weight;
+} NoiseLayer;
+
+float find_water_threshold(const NoiseLayer layers[], int layer_count, int sample_width, int sample_height, double target_percent, int seed);
+
+bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config);
+
+void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
+
+void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed); //Generates 2D world from a Top View
+
+float Zoomable_stb_perlin_noise3_seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed);
 
 
-};
 
-//void AddTile(WorldInfoFrontSideView2D& info, Tile& tile)
-//{
-//
-//};
-
-void GenerateFrontSideView2DWorld(WorldInfoFrontSideView2D& worldInfo, int seed); //Generates 2D world from a Front-Side View
-
-void GenerateTowView2DWorld(WorldInfoTopView2D& info, int seed); //Generates 2D world from a Top View
-
-#endif // PROCEDURAL_GAME_WORLD_GENERATOR_LIB
+#ifdef __cplusplus
+}
+#endif

@@ -9,7 +9,7 @@ public:
 
 	}
 
-	Position(int x, int y) :
+	Position(float x, float y) :
 		x(x),
 		y(y) 
 	{ }
@@ -24,8 +24,8 @@ public:
 
 	Position& operator*(float i)
 	{
-		x * i;
-		y * i;
+		x *= i;
+		y *= i;
 
 		return *this;
 	}

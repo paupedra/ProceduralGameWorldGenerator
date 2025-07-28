@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "Entity.h"
+#include <SDL3/SDL.h>
 
 void Entity::Render(SDL_Renderer* renderer, Position screenPos, float zoom)
 {

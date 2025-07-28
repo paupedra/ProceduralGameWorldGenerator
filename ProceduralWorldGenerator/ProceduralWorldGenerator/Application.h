@@ -1,10 +1,16 @@
 #pragma once
 #include "Position.h"
 #include "Entity.h"
+#include "UISlider.h"
 #include <vector>
+
+constexpr int WIDTH = 1000;
+constexpr int HEIGHT = 1000;
 
 struct SDL_Window;
 struct SDL_Renderer;
+struct SDL_Texture;
+struct SDL_FRect;
 
 class Application
 {
@@ -36,14 +42,16 @@ public:
 
 	SDL_Window* window = nullptr;
 	SDL_Renderer* renderer = nullptr;
+	SDL_Texture* mapTexture = nullptr;
+	SDL_FRect* dst;
 
 	bool exit = false;
 
 	float frameTime = 0.f;
 	float appStartTime = 0.f;
 	float frameRate = 60.f;
-	int framesSinceStart = 0.f;
-	int currentFrameTimeStart = 0.f;
+	int framesSinceStart = 0;
+	int currentFrameTimeStart = 0;
 	float lastFrameTimeDuration = 0.f;
 	float lastFrameTime = 0.f;
 
@@ -52,16 +60,18 @@ public:
 	float lastSecTime = 0.f;
 	float lastSecTimeStart = 0.f;
 
-	int lastSecFrames = 0.f;
-	int prevLastSecFrames = 0.f;
+	int lastSecFrames = 0;
+	int prevLastSecFrames = 0;
 
 	std::vector<Entity> entities;
 	float tileSize = 5;
-	float zoom = 0.1;
-	float zoomSpeed = 0.15;
-	int cameraSpeed = 400;
+	float zoom = 0.5f;
+	float zoomSpeed = 0.25f;
+	int cameraSpeed = 200;
 
 	Position cameraPosition;
+
+	std::vector<UISlider> sliders;
 
 private:
 	Application() = default; // no public constructor

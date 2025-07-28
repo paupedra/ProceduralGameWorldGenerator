@@ -1,5 +1,6 @@
 #include "Application.h"
 #include <iostream>
+#include <array>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
 #include "ProceduralGameWorldGeneratorLib/ProceduralGameWorldGenerator.h"
@@ -8,6 +9,8 @@
 
 bool Application::Init()
 {
+	//(AGUNSEGUIR_MOLDS_DINERS)
+
 	window = SDL_CreateWindow("Hello World", 800, 600, SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		SDL_Log("Couldn't create window: %s", SDL_GetError());
@@ -21,7 +24,6 @@ bool Application::Init()
 	}
 
 	int w = 0, h = 0;
-	float x, y;
 	const float scale = 4.0f;
 
 	/* Center the message and scale it up */
@@ -35,8 +37,8 @@ bool Application::Init()
 
 void Application::PrepareUpdate()
 {
-	currentFrameTimeStart = SDL_GetTicks();
-	dt = lastFrameTime / 1000;
+	currentFrameTimeStart = (int)SDL_GetTicks();
+	dt = lastFrameTime / 1000.f;
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
@@ -59,13 +61,13 @@ void Application::FinishUpdate()
 {
 	if (SDL_GetTicks() - lastSecTimeStart > 1000)
 	{
-		lastSecTimeStart = SDL_GetTicks();
+		lastSecTimeStart = (float)SDL_GetTicks();
 		prevLastSecFrames = lastSecFrames;
 		lastSecFrames = 0;
 	}
 
 	float avg_fps = float(framesSinceStart) / (SDL_GetTicks() / 1000);
-	float secondsSinceStart = (SDL_GetTicks() / 1000);
+	float secondsSinceStart = (float)(SDL_GetTicks() / 1000);
 
 	//int frames_on_last_update = prev_last_sec_frame_count;
 
@@ -91,8 +93,6 @@ void Application::FinishUpdate()
 
 	framesSinceStart++;
 	lastSecFrames++;
-
-	SDL_RenderPresent(renderer);
 }
 
 bool Application::ShutDown()
@@ -104,45 +104,66 @@ bool Application::ShutDown()
 void Application::GenerateWorld()
 {
 	WorldInfoTopView2D topViewWorld;
+	topViewWorld.tiles = nullptr;
+	topViewWorld.biomeCount = 0;
+	topViewWorld.width = WIDTH;
+	topViewWorld.height = HEIGHT;
+	topViewWorld.assureWaterPercentage = true;
+	topViewWorld.waterPercent = 40;
+	topViewWorld.zoom = 2;
 
-	topViewWorld.width = 200;
-	topViewWorld.height = 200;
-
-	GenerateTowView2DWorld(topViewWorld, SDL_rand(10000000000));
-
-	//Uint32 pixels[topViewWorld.width * topViewWorld.height];
+	GenerateTopView2DWorld(&topViewWorld, SDL_rand(10000000000));
 
 	entities.clear();
 
-	for (int y = 0; y < topViewWorld.width; ++y)
+	// Create some pixel data (RGBA 32-bit format)
+	std::vector<Uint32> pixels(topViewWorld.width * topViewWorld.height);
+
+	Color color;
+	for (int y = 0; y < topViewWorld.height; ++y)
 	{
-		for (int x = 0; x < topViewWorld.height; ++x)
+		for (int x = 0; x < topViewWorld.width; ++x)
 		{
 
-			Entity* entity = new Entity(Position(x * tileSize , y * tileSize ));
-			entity->size.x = tileSize;
-			entity->size.y = tileSize;
+			//Entity* entity = new Entity(Position(x * tileSize , y * tileSize ));
+			//entity->size.x = tileSize;
+			//entity->size.y = tileSize;
 
-			if (topViewWorld.tiles[x][y].tileId == 1)
+			if (topViewWorld.tiles[y][x].tileId == 1)//Land
 			{
-				entity->color = Color(0, 0, 255);
+				color = Color(0, 255, 0, 255);
 			}
-			if (topViewWorld.tiles[x][y].tileId == 2)
+			if (topViewWorld.tiles[y][x].tileId == 2)//Water
 			{
-				entity->color = Color(0, 155, 255);
-			}
-			if (topViewWorld.tiles[x][y].tileId == 3)
-			{
-				entity->color = Color(211, 169, 108);
-			}
-			if (topViewWorld.tiles[x][y].tileId == 4)
-			{
-				entity->color = Color(0, 255, 0);
+				color = Color(0, 0, 255, 255);
 			}
 
-			entities.push_back(*entity);
+			pixels[y * topViewWorld.width + x] = (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a;
+
+			//entities.push_back(*entity);
 		}
 		
+	}
+
+	dst = new SDL_FRect();
+	dst->x = 0;
+	dst->y = 0;
+	dst->w = topViewWorld.width;
+	dst->h = topViewWorld.height;
+
+	mapTexture = SDL_CreateTexture(renderer,
+		SDL_PIXELFORMAT_RGBA8888,
+		SDL_TEXTUREACCESS_STATIC,
+		topViewWorld.width, topViewWorld.height);
+
+	if (!mapTexture) {
+		SDL_Log("Texture creation failed: %s", SDL_GetError());
+	}
+	else {
+		// Update texture with our pixel data
+		if (SDL_UpdateTexture(mapTexture, nullptr, pixels.data(), topViewWorld.width * sizeof(Uint32)) != 0) {
+			SDL_Log("Texture update failed: %s", SDL_GetError());
+		}
 	}
 }
 
@@ -191,10 +212,25 @@ void Application::PollEvents()
 
 void Application::Render()
 {
+	// Clear screen
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderClear(renderer);
+
 	for (int i = 0; i < entities.size(); ++i)
 	{
 		entities[i].Render(renderer, cameraPosition, zoom);
 	}
+
+	// Draw texture if we have one
+	if (mapTexture) {
+		dst->x = cameraPosition.x;
+		dst->y = cameraPosition.y;
+		dst->w = zoom * WIDTH;
+		dst->h = zoom * HEIGHT;
+		SDL_RenderTexture(renderer, mapTexture, nullptr, dst);
+	}
+
+	SDL_RenderPresent(renderer);
 }
 
 void Application::GetCoordinateFromIndex(int index, int width, int* x, int* y)
