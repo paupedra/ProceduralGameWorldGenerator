@@ -4,8 +4,8 @@
 #include "UISlider.h"
 #include <vector>
 
-constexpr int WIDTH = 1000;
-constexpr int HEIGHT = 1000;
+constexpr int WIDTH = 200;
+constexpr int HEIGHT = 200;
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -34,6 +34,7 @@ public:
 	void FinishUpdate();
 	bool ShutDown();
 
+	void InitUISliders(SDL_Renderer* renderer);
 	void GenerateWorld();
 	void PollEvents();
 	void Render();
@@ -65,9 +66,20 @@ public:
 
 	std::vector<Entity> entities;
 	float tileSize = 5;
-	float zoom = 0.5f;
+	float zoom = 2.f;
 	float zoomSpeed = 0.25f;
 	int cameraSpeed = 200;
+
+	float width, height;
+	float waterPercent;
+	float generatorZoom;
+
+	int clickPressStartTime = 0;
+	int ticksToHold = 200;
+	int ticksToHoldOG = 200;
+	int ticksToHoldAccelerated = 75;
+	bool clickIsPressed = false;
+	int accelerateTimer = 0;
 
 	Position cameraPosition;
 

@@ -3,6 +3,7 @@
 #include <array>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include "ProceduralGameWorldGeneratorLib/ProceduralGameWorldGenerator.h"
 
 //#include "Dependencies/SDL/include/SDL3/SDL.h"
@@ -23,13 +24,18 @@ bool Application::Init()
 		return false;
 	}
 
-	int w = 0, h = 0;
-	const float scale = 4.0f;
+	if (TTF_Init() == -1) {
+		printf("TTF_Init failed: %s\n", SDL_GetError());
+		return 1;
+	}
 
-	/* Center the message and scale it up */
-	SDL_GetRenderOutputSize(renderer, &w, &h);
-	SDL_SetRenderScale(renderer, scale, scale);
+	InitUISliders(renderer);
 	
+	width = WIDTH;
+	height = HEIGHT;
+	waterPercent = 40.f;
+	generatorZoom = 2.f;
+
 	GenerateWorld(); //Call Library Here
 
 	return true;
@@ -42,6 +48,19 @@ void Application::PrepareUpdate()
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
+
+	float mouseX, mouseY;
+	SDL_GetMouseState(&mouseX, &mouseY);
+
+	/*Uint32 buttons = SDL_GetMouseState(NULL, NULL);
+	if (buttons & SDL_BUTTON_LMASK) {
+		
+	}*/
+
+	for (int i = 0; i < sliders.size(); ++i)
+	{
+		sliders[i].Click(mouseX, mouseY,false);
+	}
 }
 
 bool Application::Update()
@@ -83,9 +102,7 @@ void Application::FinishUpdate()
 	{
 		if ((1000 / frameRate) > frameTime)
 		{
-
 			SDL_Delay((1000 / frameRate) - frameTime);
-
 		}
 	}
 
@@ -101,16 +118,64 @@ bool Application::ShutDown()
 	return true;
 }
 
+void Application::InitUISliders(SDL_Renderer* renderer)
+{
+	int windowW, windowH;
+	SDL_GetWindowSize(window, &windowW, &windowH);
+
+	UISlider* zoomSlider = new UISlider(&zoom);
+	zoomSlider->valueIncrements = 0.1;
+	zoomSlider->minValue = 1.f;
+	zoomSlider->maxValue = 10.f;
+	zoomSlider->string = "ZOOM";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&width);
+	zoomSlider->valueIncrements = 5;
+	zoomSlider->minValue = 1.f;
+	zoomSlider->maxValue = 10000.f;
+	zoomSlider->string = "WIDTH";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&height);
+	zoomSlider->valueIncrements = 5;
+	zoomSlider->minValue = 1.f;
+	zoomSlider->maxValue = 10000.f;
+	zoomSlider->string = "HEIGHT";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&waterPercent);
+	zoomSlider->valueIncrements = 1;
+	zoomSlider->minValue = 0.f;
+	zoomSlider->maxValue = 99.f;
+	zoomSlider->string = "WATER%";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&generatorZoom);
+	zoomSlider->valueIncrements = 0.1f;
+	zoomSlider->minValue = 1.1f;
+	zoomSlider->maxValue = 100.f;
+	zoomSlider->string = "GENZOOM";
+	sliders.push_back(*zoomSlider);
+
+	for (int i = 0; i < sliders.size(); ++i)
+	{
+		sliders[i].Init(renderer);
+	}
+}
+
 void Application::GenerateWorld()
 {
 	WorldInfoTopView2D topViewWorld;
 	topViewWorld.tiles = nullptr;
 	topViewWorld.biomeCount = 0;
-	topViewWorld.width = WIDTH;
-	topViewWorld.height = HEIGHT;
-	topViewWorld.assureWaterPercentage = true;
-	topViewWorld.waterPercent = 40;
-	topViewWorld.zoom = 2;
+	topViewWorld.width = width;
+	topViewWorld.height = height;
+	topViewWorld.assureWaterPercentage = false;
+	topViewWorld.waterPercent = waterPercent;
+	topViewWorld.zoom = generatorZoom;
+	topViewWorld.addBeach = true;
+	topViewWorld.beachPercent = 20;
 
 	GenerateTopView2DWorld(&topViewWorld, SDL_rand(10000000000));
 
@@ -136,6 +201,10 @@ void Application::GenerateWorld()
 			if (topViewWorld.tiles[y][x].tileId == 2)//Water
 			{
 				color = Color(0, 0, 255, 255);
+			}
+			if (topViewWorld.tiles[y][x].tileId == 3)//Water
+			{
+				color = Color(255, 255, 0, 255);
 			}
 
 			pixels[y * topViewWorld.width + x] = (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a;
@@ -196,18 +265,67 @@ void Application::PollEvents()
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 
-		if (event.type == SDL_EVENT_QUIT) {
+		switch (event.type)
+		{
+		case SDL_EVENT_QUIT:
 			exit = true;
-		}
-		if (event.type == SDL_EVENT_KEY_DOWN) {
+			break;
+
+		case SDL_EVENT_KEY_DOWN:
 
 			switch (event.key.key) {
 			case SDLK_R:
 				GenerateWorld();
 				break;
 			}
+
+		case SDL_EVENT_MOUSE_BUTTON_UP:
+			if (event.button.button == SDL_BUTTON_LEFT) {
+				clickIsPressed = false;
+				ticksToHold = ticksToHoldOG;
+				/*for (int i = 0; i < sliders.size(); ++i)
+				{
+					sliders[i].Click(event.button.x, event.button.y, true);
+				}*/
+			}
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			if (event.button.button == SDL_BUTTON_LEFT) {
+
+				clickIsPressed = true;
+				clickPressStartTime = SDL_GetTicks();
+				accelerateTimer = 0;
+				for (int i = 0; i < sliders.size(); ++i)
+				{
+					printf("Mouse Press %f, %f \n", event.button.x, event.button.y);
+					sliders[i].Click(event.button.x, event.button.y, true);
+				}
+			}
+			break;
 		}
 	}
+
+	if (clickIsPressed)
+	{
+		if (SDL_GetTicks() > clickPressStartTime + ticksToHold)
+		{
+			clickPressStartTime = SDL_GetTicks();
+			accelerateTimer++;
+
+			if (accelerateTimer >= 5)
+			{
+				ticksToHold = ticksToHoldAccelerated;
+			}
+
+			for (int i = 0; i < sliders.size(); ++i)
+			{
+				float mouseX, mouseY;
+				SDL_GetMouseState(&mouseX, &mouseY);
+				sliders[i].Click(mouseX, mouseY, true);
+			}
+		}
+	}
+
 }
 
 void Application::Render()
@@ -225,9 +343,20 @@ void Application::Render()
 	if (mapTexture) {
 		dst->x = cameraPosition.x;
 		dst->y = cameraPosition.y;
-		dst->w = zoom * WIDTH;
-		dst->h = zoom * HEIGHT;
+		dst->w = zoom * width;
+		dst->h = zoom * height;
 		SDL_RenderTexture(renderer, mapTexture, nullptr, dst);
+	}
+
+	int windowW, windowH;
+	SDL_GetWindowSize(window, &windowW, &windowH);
+
+	for (int i = 0; i < sliders.size(); ++i)
+	{
+		sliders[i].position.x = windowW - 70;
+		sliders[i].position.y = 50 * i;
+
+		sliders[i].Render(renderer, window);
 	}
 
 	SDL_RenderPresent(renderer);

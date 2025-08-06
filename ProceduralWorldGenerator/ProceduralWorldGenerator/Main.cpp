@@ -1,3 +1,4 @@
+#define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -18,7 +19,7 @@ Application* Application::instance = nullptr;
 
 static AppState appState;
 
-int main(int argc, char* argv[])
+int SDL_main(int argc, char* argv[])
 {
     
     AppState appState = AppState::CREATION;

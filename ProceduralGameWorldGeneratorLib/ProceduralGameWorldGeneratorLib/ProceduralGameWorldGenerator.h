@@ -39,6 +39,9 @@ typedef struct WorldInfoTopView2D
 
 	bool assureWaterPercentage; //Wether the generator should assure the percentage will be accurate but will require more processing time
 	float waterPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
+
+	bool addBeach;
+	float beachPercent;
 	
 	//bool waterHasElevation; //Weather want to assign elevation to bodies of water
 	//int maxTerrainElevation, minTerrainElevation; //In units maximum and minimum elevation in the whole world
@@ -50,17 +53,15 @@ typedef struct {
 	double weight;
 } NoiseLayer;
 
-float find_water_threshold(const NoiseLayer layers[], int layer_count, int sample_width, int sample_height, double target_percent, int seed);
-
 bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config);
 
 void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
 
 void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed); //Generates 2D world from a Top View
 
-float Zoomable_stb_perlin_noise3_seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed);
+float ZoomablePerlinNoise3Seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed);
 
-
+void AllocateTiles(WorldInfoTopView2D* info);
 
 #ifdef __cplusplus
 }
