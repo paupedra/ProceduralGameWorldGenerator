@@ -11,6 +11,9 @@ struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Texture;
 struct SDL_FRect;
+struct TTF_Font;
+
+struct WorldInfoTopView2D;
 
 class Application
 {
@@ -44,7 +47,7 @@ public:
 	SDL_Window* window = nullptr;
 	SDL_Renderer* renderer = nullptr;
 	SDL_Texture* mapTexture = nullptr;
-	SDL_FRect* dst;
+	SDL_FRect* mapTextureDst = nullptr;
 
 	bool exit = false;
 
@@ -83,7 +86,12 @@ public:
 
 	Position cameraPosition;
 
+	WorldInfoTopView2D* topViewWorld;
+
 	std::vector<UISlider> sliders;
+	std::vector<UIButton> buttons;
+	TTF_Font* font = nullptr;
+	WorldInfoTopView2D* uiTopViewWorld;
 
 private:
 	Application() = default; // no public constructor

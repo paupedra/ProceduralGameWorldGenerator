@@ -26,8 +26,7 @@ int compare_floats(const void* a, const void* b) {
     return (fa > fb) - (fa < fb); // Returns -1, 0, or 1
 }
 
-// Swap two float elements
-void swap(float* a, float* b) {
+void swap(float* a, float* b) {// Swap two float elements
     float temp = *a;
     *a = *b;
     *b = temp;
@@ -77,12 +76,15 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     if(info->assureWaterPercentage)
         sortValues = malloc(total_samples * sizeof(float));
 
-    int biggerSize = info->width;
+    float biggerSize = info->width;
 
     if (info->width < info->height)
         biggerSize = info->height;  //Avoid stretching, we generate a square with biggest size
 
     float nx, ny;
+    float total;
+    float weight_sum;
+    float noise;
     for (int y = 0; y < info->height; y++)  // 3. Generate noise values across a grid
     {
         for (int x = 0; x < info->width; x++) 
@@ -90,17 +92,18 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
             nx = (float)x / biggerSize;   // Normalize coordinates to [0,1] range
             ny = (float)y / biggerSize;
             
-            float total = 0.0;
-            float weight_sum = 0.0; // Calculate weighted sum of all noise layers
+            total = 0.0;
+            weight_sum = 0.0; // Calculate weighted sum of all noise layers
 
             for (int i = 0; i < layer_count; i++) 
             {
-                float noise = ZoomablePerlinNoise3Seed(layers[i].zoom, nx, ny, 0, 0, 0, 0, seed); //From -0.5 to 0.5?
+                noise = ZoomablePerlinNoise3Seed(layers[i].zoom, nx, ny, 0, 0, 0, 0, seed); //From -0.5 to 0.5?
                 total += noise * layers[i].weight;
                 weight_sum += layers[i].weight;
             }
 
-            values[y * info->width + x] = total / weight_sum;
+            if(values)
+                values[y * info->width + x] = total / weight_sum;
 
             if(info->assureWaterPercentage)
                 sortValues[y * info->width + x] = total / weight_sum;
@@ -112,8 +115,8 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     {
         quickSort(sortValues, 0, total_samples - 1);// 4. Sort all noise values from lowest to highest
         
-        waterThreshold = sortValues[(int)(total_samples * info->waterPercent / 100.0)]; // 5. Find the threshold value at our target position
-        free(sortValues);
+        if(sortValues)
+            waterThreshold = sortValues[(int)(total_samples * info->waterPercent / 100.0)]; // 5. Find the threshold value at our target position
     }
     else
     {
@@ -131,62 +134,55 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
                    //If rules make "beach" area arround big bodies of water
 
             float beachThreshhold = waterThreshold + (info->beachPercent / 100) * (0.5f - waterThreshold);
-            if (values[y * info->width + x] > waterThreshold)
+            if (values)
             {
-                info->tiles[y][x].tileId = 1; //Land
-                landTiles++;
-
-                if (info->addBeach)
+                if (values[y * info->width + x] > waterThreshold)
                 {
-                    
-                    if (values[y * info->width + x] < beachThreshhold)
+                    info->tiles[y*info->width +x].tileId = 1; //Land
+                    landTiles++;
+
+                    if (info->addBeach)
                     {
-                        info->tiles[y][x].tileId = 3; //Beach
+
+                        if (values[y * info->width + x] < beachThreshhold)
+                        {
+                            info->tiles[y * info->width + x].tileId = 3; //Beach
+                        }
                     }
                 }
+                if (values[y * info->width + x] <= waterThreshold)
+                {
+                    info->tiles[y * info->width + x].tileId = 2; //Water
+                    waterTiles++;
+                }
             }
-            if (values[y * info->width + x] <= waterThreshold)
-            {
-                info->tiles[y][x].tileId = 2; //Water
-                waterTiles++;
-            }
-
             
 
             //Terrain Elevation
         }
     }
 
-    free(values);
+    if(sortValues)
+        free(sortValues);
+
+    if(values)
+        free(values);
 
     float finalWaterPercent = ((float)waterTiles / (float)(info->width * info->height))* 100.f;
 }
 
 void AllocateTiles(WorldInfoTopView2D* info)
 {
+    if (!info) return; // Check for NULL input
+    if (info->height <= 0 || info->width <= 0) return;
+
     if (info->tiles) {
         free(info->tiles);
+        info->tiles = NULL;
     }
 
-    info->tiles = (Tile**)malloc(info->height * sizeof(Tile*));
-    if (!info->tiles) {
-        free(info->tiles);
-        return;
-    }
-
-    for (int y = 0; y < info->height; y++) {
-        info->tiles[y] = (Tile*)malloc(info->width * sizeof(Tile));
-        if (!info->tiles[y]) {
-            // Cleanup already allocated rows if allocation fails
-            for (int x = 0; x < y; x++) {
-                free(info->tiles[x]);
-            }
-            free(info->tiles);
-            return;
-        }
-        // Initialize with zeros
-        memset(info->tiles[y], 0, info->width * sizeof(Tile));
-    }
+    info->tiles = (Tile*)calloc(info->height * info->width, sizeof(Tile));
+    if (!info->tiles) return;
 }
 
 float ZoomablePerlinNoise3Seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed)

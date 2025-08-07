@@ -29,14 +29,19 @@ bool Application::Init()
 		return 1;
 	}
 
+	int windowW, windowH;
+	SDL_GetWindowSize(window, &windowW, &windowH);
+
 	InitUISliders(renderer);
-	
-	width = WIDTH;
-	height = HEIGHT;
-	waterPercent = 40.f;
-	generatorZoom = 2.f;
+
+	mapTextureDst = new SDL_FRect();
+	topViewWorld = new WorldInfoTopView2D();
+	topViewWorld->tiles = nullptr;
 
 	GenerateWorld(); //Call Library Here
+
+	cameraPosition.x = (windowW / 2) - (zoom * width / 2);
+	cameraPosition.y = (windowH / 2) - (zoom * height / 2);
 
 	return true;
 }
@@ -51,11 +56,6 @@ void Application::PrepareUpdate()
 
 	float mouseX, mouseY;
 	SDL_GetMouseState(&mouseX, &mouseY);
-
-	/*Uint32 buttons = SDL_GetMouseState(NULL, NULL);
-	if (buttons & SDL_BUTTON_LMASK) {
-		
-	}*/
 
 	for (int i = 0; i < sliders.size(); ++i)
 	{
@@ -114,12 +114,34 @@ void Application::FinishUpdate()
 
 bool Application::ShutDown()
 {
+	delete(uiTopViewWorld);
+	delete(mapTextureDst);
+	delete(topViewWorld->tiles);
+	delete(topViewWorld);
+	delete(font);
+	sliders.clear();
+	buttons.clear();
 	SDL_DestroyWindow(window);
 	return true;
 }
 
 void Application::InitUISliders(SDL_Renderer* renderer)
 {
+	uiTopViewWorld = new WorldInfoTopView2D;
+
+	width = WIDTH;
+	height = HEIGHT;
+	uiTopViewWorld->waterPercent = 40.f;
+	uiTopViewWorld->assureWaterPercentage = false;
+	uiTopViewWorld->addBeach = true;
+	uiTopViewWorld->beachPercent = 10.f;
+	uiTopViewWorld->zoom = 2.f;
+
+	font = TTF_OpenFont("Assets/Fonts/console.ttf", 18);
+	if (!font) {
+		printf("Failed to load font: %s\n", SDL_GetError());
+	}
+
 	int windowW, windowH;
 	SDL_GetWindowSize(window, &windowW, &windowH);
 
@@ -144,14 +166,21 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 	zoomSlider->string = "HEIGHT";
 	sliders.push_back(*zoomSlider);
 
-	zoomSlider = new UISlider(&waterPercent);
+	zoomSlider = new UISlider(&uiTopViewWorld->waterPercent);
 	zoomSlider->valueIncrements = 1;
 	zoomSlider->minValue = 0.f;
 	zoomSlider->maxValue = 99.f;
-	zoomSlider->string = "WATER%";
+	zoomSlider->string = "WATER %";
 	sliders.push_back(*zoomSlider);
 
-	zoomSlider = new UISlider(&generatorZoom);
+	zoomSlider = new UISlider(&uiTopViewWorld->beachPercent);
+	zoomSlider->valueIncrements = 1.f;
+	zoomSlider->minValue = 0.f;
+	zoomSlider->maxValue = 99.f;
+	zoomSlider->string = "Beach %";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&uiTopViewWorld->zoom);
 	zoomSlider->valueIncrements = 0.1f;
 	zoomSlider->minValue = 1.1f;
 	zoomSlider->maxValue = 100.f;
@@ -160,85 +189,89 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 
 	for (int i = 0; i < sliders.size(); ++i)
 	{
-		sliders[i].Init(renderer);
+		sliders[i].Init(renderer, font);
+	}
+
+	UIButton* button = new UIButton(&uiTopViewWorld->assureWaterPercentage);
+	button->string = "Assure Water";
+	buttons.push_back(*button);
+
+	button = new UIButton(&uiTopViewWorld->addBeach);
+	button->string = "Add Beach";
+	buttons.push_back(*button);
+
+	for (int i = 0; i < buttons.size(); ++i)
+	{
+		buttons[i].Init(renderer, font);
 	}
 }
 
 void Application::GenerateWorld()
 {
-	WorldInfoTopView2D topViewWorld;
-	topViewWorld.tiles = nullptr;
-	topViewWorld.biomeCount = 0;
-	topViewWorld.width = width;
-	topViewWorld.height = height;
-	topViewWorld.assureWaterPercentage = false;
-	topViewWorld.waterPercent = waterPercent;
-	topViewWorld.zoom = generatorZoom;
-	topViewWorld.addBeach = true;
-	topViewWorld.beachPercent = 20;
+	topViewWorld->biomeCount = 0;
+	topViewWorld->width = width;
+	topViewWorld->height = height;
+	topViewWorld->assureWaterPercentage = uiTopViewWorld->assureWaterPercentage;
+	topViewWorld->waterPercent = uiTopViewWorld->waterPercent;
+	topViewWorld->zoom = uiTopViewWorld->zoom;
+	topViewWorld->addBeach = uiTopViewWorld->addBeach;
+	topViewWorld->beachPercent = uiTopViewWorld->beachPercent;
 
-	GenerateTopView2DWorld(&topViewWorld, SDL_rand(10000000000));
+	GenerateTopView2DWorld(topViewWorld, SDL_rand(10000000000));
 
-	entities.clear();
-
-	// Create some pixel data (RGBA 32-bit format)
-	std::vector<Uint32> pixels(topViewWorld.width * topViewWorld.height);
+	std::vector<Uint32> pixels(topViewWorld->width * topViewWorld->height);// Create some pixel data (RGBA 32-bit format)
 
 	Color color;
-	for (int y = 0; y < topViewWorld.height; ++y)
+	for (int y = 0; y < topViewWorld->height; ++y)
 	{
-		for (int x = 0; x < topViewWorld.width; ++x)
+		for (int x = 0; x < topViewWorld->width; ++x)
 		{
-
-			//Entity* entity = new Entity(Position(x * tileSize , y * tileSize ));
-			//entity->size.x = tileSize;
-			//entity->size.y = tileSize;
-
-			if (topViewWorld.tiles[y][x].tileId == 1)//Land
+			if (topViewWorld->tiles)
 			{
-				color = Color(0, 255, 0, 255);
-			}
-			if (topViewWorld.tiles[y][x].tileId == 2)//Water
-			{
-				color = Color(0, 0, 255, 255);
-			}
-			if (topViewWorld.tiles[y][x].tileId == 3)//Water
-			{
-				color = Color(255, 255, 0, 255);
+				if (topViewWorld->tiles[y* topViewWorld->width + x].tileId == 1)//Land
+				{
+					color = Color(0, 255, 0, 255);
+				}
+				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 2)//Water
+				{
+					color = Color(0, 0, 255, 255);
+				}
+				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 3)//Beach
+				{
+					color = Color(255, 255, 0, 255);
+				}
 			}
 
-			pixels[y * topViewWorld.width + x] = (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a;
-
-			//entities.push_back(*entity);
+			pixels[y * topViewWorld->width + x] = (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a;
 		}
-		
 	}
+	
+	mapTextureDst->x = 0;
+	mapTextureDst->y = 0;
+	mapTextureDst->w = topViewWorld->width;
+	mapTextureDst->h = topViewWorld->height;
 
-	dst = new SDL_FRect();
-	dst->x = 0;
-	dst->y = 0;
-	dst->w = topViewWorld.width;
-	dst->h = topViewWorld.height;
+	SDL_DestroyTexture(mapTexture);
 
 	mapTexture = SDL_CreateTexture(renderer,
 		SDL_PIXELFORMAT_RGBA8888,
 		SDL_TEXTUREACCESS_STATIC,
-		topViewWorld.width, topViewWorld.height);
+		topViewWorld->width, topViewWorld->height);
 
 	if (!mapTexture) {
 		SDL_Log("Texture creation failed: %s", SDL_GetError());
 	}
 	else {
-		// Update texture with our pixel data
-		if (SDL_UpdateTexture(mapTexture, nullptr, pixels.data(), topViewWorld.width * sizeof(Uint32)) != 0) {
+		if (!SDL_UpdateTexture(mapTexture, nullptr, pixels.data(), topViewWorld->width * sizeof(Uint32)) != 0) { // Update texture with our pixel data
 			SDL_Log("Texture update failed: %s", SDL_GetError());
 		}
 	}
+	
+	pixels.clear();
 }
 
 void Application::PollEvents()
 {
-
 	// Get the current keyboard state
 	const bool* keyboardState = SDL_GetKeyboardState(NULL);
 
@@ -283,10 +316,6 @@ void Application::PollEvents()
 			if (event.button.button == SDL_BUTTON_LEFT) {
 				clickIsPressed = false;
 				ticksToHold = ticksToHoldOG;
-				/*for (int i = 0; i < sliders.size(); ++i)
-				{
-					sliders[i].Click(event.button.x, event.button.y, true);
-				}*/
 			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -297,8 +326,12 @@ void Application::PollEvents()
 				accelerateTimer = 0;
 				for (int i = 0; i < sliders.size(); ++i)
 				{
-					printf("Mouse Press %f, %f \n", event.button.x, event.button.y);
-					sliders[i].Click(event.button.x, event.button.y, true);
+					sliders[i].Click(event.button.x, event.button.y, true,renderer);
+				}
+
+				for (int i = 0; i < buttons.size(); ++i)
+				{
+					buttons[i].Click(event.button.x, event.button.y,true, renderer);
 				}
 			}
 			break;
@@ -321,7 +354,7 @@ void Application::PollEvents()
 			{
 				float mouseX, mouseY;
 				SDL_GetMouseState(&mouseX, &mouseY);
-				sliders[i].Click(mouseX, mouseY, true);
+				sliders[i].Click(mouseX, mouseY, true,renderer);
 			}
 		}
 	}
@@ -339,24 +372,36 @@ void Application::Render()
 		entities[i].Render(renderer, cameraPosition, zoom);
 	}
 
-	// Draw texture if we have one
-	if (mapTexture) {
-		dst->x = cameraPosition.x;
-		dst->y = cameraPosition.y;
-		dst->w = zoom * width;
-		dst->h = zoom * height;
-		SDL_RenderTexture(renderer, mapTexture, nullptr, dst);
-	}
-
 	int windowW, windowH;
 	SDL_GetWindowSize(window, &windowW, &windowH);
+
+	// Draw texture if we have one
+	if (mapTexture) {
+		mapTextureDst->x = cameraPosition.x;
+		mapTextureDst->y = cameraPosition.y;
+		mapTextureDst->w = zoom * width;
+		mapTextureDst->h = zoom * height;
+		SDL_RenderTexture(renderer, mapTexture, nullptr, mapTextureDst);
+	}
+
+	float posY = 0;
 
 	for (int i = 0; i < sliders.size(); ++i)
 	{
 		sliders[i].position.x = windowW - 70;
-		sliders[i].position.y = 50 * i;
+		sliders[i].position.y = posY;
+		posY += 40;
 
 		sliders[i].Render(renderer, window);
+	}
+
+	for (int i = 0; i < buttons.size(); ++i)
+	{
+		buttons[i].position.x = windowW - 70;
+		buttons[i].position.y = posY;
+		posY += 20;
+
+		buttons[i].Render(renderer, window);
 	}
 
 	SDL_RenderPresent(renderer);
