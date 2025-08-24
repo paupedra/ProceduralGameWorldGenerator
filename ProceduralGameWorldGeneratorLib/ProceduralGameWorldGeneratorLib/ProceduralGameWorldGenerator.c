@@ -12,50 +12,6 @@ bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config)
     return false;
 }
 
-void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome)
-{
-    assert(worldInfo->biomeCount < MAX_BIOMES); //Make sure you don't add more biomes than MAXBIOMES
-    
-    worldInfo->biomes[worldInfo->biomeCount] = biome;
-    worldInfo->biomeCount++;
-}
-
-int compare_floats(const void* a, const void* b) {
-    float fa = *(const float*)a; // Cast to float pointer and dereference
-    float fb = *(const float*)b;
-    return (fa > fb) - (fa < fb); // Returns -1, 0, or 1
-}
-
-void swap(float* a, float* b) {// Swap two float elements
-    float temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
-// Partition the array and return the pivot index
-int partition(float arr[], int low, int high) {
-    float pivot = arr[high];  // Choose last element as pivot
-    int i = low - 1;          // Index of smaller element
-
-    for (int j = low; j < high; j++) {
-        if (arr[j] <= pivot) {  // Compare floats
-            i++;
-            swap(&arr[i], &arr[j]);
-        }
-    }
-    swap(&arr[i + 1], &arr[high]);  // Place pivot in correct position
-    return i + 1;                   // Return pivot index
-}
-
-// QuickSort function for floats
-void quickSort(float arr[], int low, int high) {
-    if (low < high) {
-        int pi = partition(arr, low, high);  // Partition index
-        quickSort(arr, low, pi - 1);        // Sort left subarray
-        quickSort(arr, pi + 1, high);        // Sort right subarray
-    }
-}
-
 void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
 {
     AllocateTiles(info);
@@ -66,6 +22,7 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
         {7.f * info->zoom, 0.35f},   // Medium-scale features
         {30.f * info->zoom, 0.05f}    // Small-scale details
     };
+
     int layer_count = sizeof(layers) / sizeof(layers[0]);
 
     const int total_samples = info->width * info->height; // 1. Calculate total samples and how many should be water
@@ -79,41 +36,39 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     float biggerSize = info->width;
 
     if (info->width < info->height)
-        biggerSize = info->height;  //Avoid stretching, we generate a square with biggest size
+        biggerSize = info->height;  // Avoid stretching, we normalize to fit the bigger side
 
-    float nx, ny;
-    float total;
-    float weight_sum;
-    float noise;
+    float nx = 0.f, ny = 0.f, total = 0.f, weightSum = 0.f, noise = 0.f;
+
     for (int y = 0; y < info->height; y++)  // 3. Generate noise values across a grid
     {
         for (int x = 0; x < info->width; x++) 
         {
-            nx = (float)x / biggerSize;   // Normalize coordinates to [0,1] range
+            nx = (float)x / biggerSize; // Normalize coordinates to [0,1] range
             ny = (float)y / biggerSize;
             
             total = 0.0;
-            weight_sum = 0.0; // Calculate weighted sum of all noise layers
+            weightSum = 0.0;
 
             for (int i = 0; i < layer_count; i++) 
             {
-                noise = ZoomablePerlinNoise3Seed(layers[i].zoom, nx, ny, 0, 0, 0, 0, seed); //From -0.5 to 0.5?
+                noise = ZoomablePerlinNoise3Seed(layers[i].zoom, nx, ny, 0, 0, 0, 0, seed); // From -0.5 to 0.5
                 total += noise * layers[i].weight;
-                weight_sum += layers[i].weight;
+                weightSum += layers[i].weight;
             }
 
             if(values)
-                values[y * info->width + x] = total / weight_sum;
+                values[y * info->width + x] = total / weightSum;
 
             if(info->assureWaterPercentage)
-                sortValues[y * info->width + x] = total / weight_sum;
+                sortValues[y * info->width + x] = total / weightSum;
         }
     }
 
-    float waterThreshold;
+    float waterThreshold = 0.f;
     if (info->assureWaterPercentage)
     {
-        quickSort(sortValues, 0, total_samples - 1);// 4. Sort all noise values from lowest to highest
+        QuickSort(sortValues, 0, total_samples - 1); // 4. Sort all noise values from lowest to highest
         
         if(sortValues)
             waterThreshold = sortValues[(int)(total_samples * info->waterPercent / 100.0)]; // 5. Find the threshold value at our target position
@@ -171,6 +126,14 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     float finalWaterPercent = ((float)waterTiles / (float)(info->width * info->height))* 100.f;
 }
 
+void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome)
+{
+    assert(worldInfo->biomeCount < MAX_BIOMES); //Make sure you don't add more biomes than MAXBIOMES
+
+    worldInfo->biomes[worldInfo->biomeCount] = biome;
+    worldInfo->biomeCount++;
+}
+
 void AllocateTiles(WorldInfoTopView2D* info)
 {
     if (!info) return; // Check for NULL input
@@ -188,4 +151,42 @@ void AllocateTiles(WorldInfoTopView2D* info)
 float ZoomablePerlinNoise3Seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed)
 {
     return stb_perlin_noise3_seed(x * zoom, y * zoom, 0, 0, 0, 0, seed);
+}
+
+int CompareFloats(const void* a, const void* b)
+{
+    float fa = *(const float*)a;
+    float fb = *(const float*)b;
+    return (fa > fb) - (fa < fb); // Returns -1, 0, or 1
+}
+
+void Swap(float* a, float* b) // Swap two float elements
+{
+    float temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int Partition(float arr[], int low, int high) // Partition the array and return the pivot index
+{
+    float pivot = arr[high];  // Choose last element as pivot
+    int i = low - 1;          // Index of smaller element
+
+    for (int j = low; j < high; j++) {
+        if (arr[j] <= pivot) {  // Compare floats
+            i++;
+            Swap(&arr[i], &arr[j]);
+        }
+    }
+    Swap(&arr[i + 1], &arr[high]);  // Place pivot in correct position
+    return i + 1;                   // Return pivot index
+}
+
+void QuickSort(float arr[], int low, int high) // QuickSort function for floats
+{
+    if (low < high) {
+        int pi = Partition(arr, low, high);  // Partition index
+        QuickSort(arr, low, pi - 1);        // Sort left subarray
+        QuickSort(arr, pi + 1, high);        // Sort right subarray
+    }
 }

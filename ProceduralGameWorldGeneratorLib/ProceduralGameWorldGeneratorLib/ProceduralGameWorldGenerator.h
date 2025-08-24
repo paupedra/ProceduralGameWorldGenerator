@@ -62,22 +62,31 @@ typedef struct WorldInfoTopView2D
 // --- FUNCTIONS ----
 
 // Generation Functions
+
 //External
+bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config); //Validate Struct Before Generating World
+
 void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed); //Generates 2D world from a Top View
 
-bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config);
+void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
+//--External
 
 //Internal
 void AllocateTiles(WorldInfoTopView2D* info);
-// -- Generation Functions
-
-
-
-void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
 
 float ZoomablePerlinNoise3Seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed);
+//--Internal
+// -- Generation Functions
 
+//QuickSort
+int CompareFloats(const void* a, const void* b);
 
+void Swap(float* a, float* b); // Swap two float elements
+
+int Partition(float arr[], int low, int high); // Partition the array and return the pivot index
+
+void QuickSort(float arr[], int low, int high); // QuickSort function for floats
+//--QuickSort
 
 #ifdef __cplusplus
 }
