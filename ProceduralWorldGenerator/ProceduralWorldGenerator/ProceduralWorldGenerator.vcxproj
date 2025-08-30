@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3\SDL3_ttf;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralGameWorldGeneratorLib;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ProceduralWorldGenerator\include\SDL3\SDL3_ttf;$(SolutionDir)ProceduralWorldGenerator\include\SDL3;$(SolutionDir)..\ProceduralGameWorldGeneratorLib;$(SolutionDir)ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -105,7 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3\SDL3_ttf;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralGameWorldGeneratorLib;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ProceduralWorldGenerator\include\SDL3\SDL3_ttf;$(SolutionDir)ProceduralWorldGenerator\include\SDL3;$(SolutionDir)..\ProceduralGameWorldGeneratorLib;$(SolutionDir)ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3\SDL3_ttf;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralGameWorldGeneratorLib;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ProceduralWorldGenerator\include\SDL3\SDL3_ttf;$(SolutionDir)ProceduralWorldGenerator\include\SDL3;$(SolutionDir)..\ProceduralGameWorldGeneratorLib;$(SolutionDir)ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3\SDL3_ttf;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include\SDL3;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralGameWorldGeneratorLib;C:\Users\Pau\Documents\GitHub\ProceduralWorldGenerator\ProceduralWorldGenerator\ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ProceduralWorldGenerator\include\SDL3\SDL3_ttf;$(SolutionDir)ProceduralWorldGenerator\include\SDL3;$(SolutionDir)..\ProceduralGameWorldGeneratorLib;$(SolutionDir)ProceduralWorldGenerator\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

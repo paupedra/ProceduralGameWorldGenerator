@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+
+!SDL3_ttf.dll
+!SDL3_ttf.lib
+!SDL3_ttf.pdb
+
+
 # User-specific files
 *.rsuser
 *.suo
