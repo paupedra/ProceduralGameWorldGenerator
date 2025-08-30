@@ -43,6 +43,8 @@ typedef struct WorldInfoTopView2D
 	int width, height; //Input: Width and Height of the map in tiles
 	float zoom; //Input: Default to 1, sets the zoom for the noise, if the map is bigger a bigger zoom is recommended
 
+	NoiseLayer* noiseLayers;
+
 	Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
 	int biomeCount; //Set to 0
 
@@ -62,7 +64,6 @@ typedef struct WorldInfoTopView2D
 // --- FUNCTIONS ----
 
 // Generation Functions
-
 //External
 bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config); //Validate Struct Before Generating World
 

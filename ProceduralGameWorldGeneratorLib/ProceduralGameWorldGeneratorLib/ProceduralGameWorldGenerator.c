@@ -9,7 +9,12 @@
 
 bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config)
 {
-    return false;
+
+    assert(config->waterPercent < 1 || config->waterPercent > 99); //WaterPercent cannot be smaller than 1 or bigger than 99
+
+    assert(config->beachPercent < 1 || config->beachPercent > 99);  //BeachPercent cannot be smaller than 1 or bigger than 99
+
+    return true;
 }
 
 void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)

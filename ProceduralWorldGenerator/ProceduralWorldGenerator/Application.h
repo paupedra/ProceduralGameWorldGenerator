@@ -88,10 +88,15 @@ public:
 
 	WorldInfoTopView2D* topViewWorld;
 
+	int seed = 0;
+
 	std::vector<UISlider> sliders;
 	std::vector<UIButton> buttons;
 	TTF_Font* font = nullptr;
 	WorldInfoTopView2D* uiTopViewWorld;
+
+	SDL_Texture* seedTexture = nullptr;
+	SDL_Surface* seedSurface = nullptr;
 
 private:
 	Application() = default; // no public constructor

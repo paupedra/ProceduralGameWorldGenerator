@@ -6,8 +6,6 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include "ProceduralGameWorldGeneratorLib/ProceduralGameWorldGenerator.h"
 
-//#include "Dependencies/SDL/include/SDL3/SDL.h"
-
 bool Application::Init()
 {
 	//(AGUNSEGUIR_MOLDS_DINERS)
@@ -87,8 +85,6 @@ void Application::FinishUpdate()
 
 	float avg_fps = float(framesSinceStart) / (SDL_GetTicks() / 1000);
 	float secondsSinceStart = (float)(SDL_GetTicks() / 1000);
-
-	//int frames_on_last_update = prev_last_sec_frame_count;
 
 	static char title[256];
 	sprintf_s(title, 256, "FPS: %.2f Av.FPS: %.2f Last Frame Ms: %f Last sec frames: %i  Time since startup: %.3f Frame Count: %lu Dt: %f",
@@ -217,7 +213,9 @@ void Application::GenerateWorld()
 	topViewWorld->addBeach = uiTopViewWorld->addBeach;
 	topViewWorld->beachPercent = uiTopViewWorld->beachPercent;
 
-	GenerateTopView2DWorld(topViewWorld, SDL_rand(10000000000));
+	seed = SDL_rand(10000000000);
+
+	GenerateTopView2DWorld(topViewWorld, seed);
 
 	std::vector<Uint32> pixels(topViewWorld->width * topViewWorld->height);// Create some pixel data (RGBA 32-bit format)
 
@@ -265,6 +263,20 @@ void Application::GenerateWorld()
 		if (!SDL_UpdateTexture(mapTexture, nullptr, pixels.data(), topViewWorld->width * sizeof(Uint32)) != 0) { // Update texture with our pixel data
 			SDL_Log("Texture update failed: %s", SDL_GetError());
 		}
+	}
+
+	SDL_DestroySurface(seedSurface);
+	SDL_DestroyTexture(seedTexture);
+
+	//Init Seed String
+	SDL_Color seedColor = { 255,255,255,255 };
+	char buffer[32];
+	snprintf(buffer, sizeof(buffer), "Seed: %d", seed);
+	const char* str = buffer;
+	seedSurface = TTF_RenderText_Solid(font, str, 0, seedColor);
+	seedTexture = SDL_CreateTextureFromSurface(renderer, seedSurface);
+	if (seedTexture == NULL) {
+		SDL_Log("Couldn't create seed texture: %s", SDL_GetError());
 	}
 	
 	pixels.clear();
@@ -375,7 +387,7 @@ void Application::Render()
 	int windowW, windowH;
 	SDL_GetWindowSize(window, &windowW, &windowH);
 
-	// Draw texture if we have one
+	// Draw map texture if we have one
 	if (mapTexture) {
 		mapTextureDst->x = cameraPosition.x;
 		mapTextureDst->y = cameraPosition.y;
@@ -383,6 +395,9 @@ void Application::Render()
 		mapTextureDst->h = zoom * height;
 		SDL_RenderTexture(renderer, mapTexture, nullptr, mapTextureDst);
 	}
+
+	SDL_FRect dest = { 0, 0, seedSurface->w, seedSurface->h };
+	SDL_RenderTexture(renderer, seedTexture, NULL, &dest);
 
 	float posY = 0;
 
