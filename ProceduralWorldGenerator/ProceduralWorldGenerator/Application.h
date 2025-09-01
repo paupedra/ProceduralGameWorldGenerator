@@ -1,6 +1,6 @@
 #pragma once
 #include "Position.h"
-#include "Entity.h"
+#include "Color.h"
 #include "UISlider.h"
 #include <vector>
 
@@ -67,8 +67,6 @@ public:
 	int lastSecFrames = 0;
 	int prevLastSecFrames = 0;
 
-	std::vector<Entity> entities;
-	float tileSize = 5;
 	float zoom = 2.f;
 	float zoomSpeed = 0.25f;
 	int cameraSpeed = 200;

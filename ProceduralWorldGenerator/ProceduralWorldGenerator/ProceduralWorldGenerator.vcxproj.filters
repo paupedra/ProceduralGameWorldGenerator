@@ -15,16 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="hello.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Entity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Position.cpp">
@@ -38,13 +32,13 @@
     <ClInclude Include="Application.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Entity.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Position.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="UISlider.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Color.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

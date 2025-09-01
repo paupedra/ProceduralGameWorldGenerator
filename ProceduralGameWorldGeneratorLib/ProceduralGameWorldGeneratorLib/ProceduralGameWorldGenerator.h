@@ -13,7 +13,7 @@ extern "C" {
 typedef struct Tile
 {
 	int tileId; //Represents the type of final tile
-	int biomeId;
+	//int biomeId;
 } Tile;
 
 typedef struct BiomeTile
@@ -21,13 +21,12 @@ typedef struct BiomeTile
 	int tileId;
 } BiomeTile;
 
-typedef struct Biome
-{
-	int id;
-
-
-	//float biomeTerrainElevationVariation; //Specific Biome Elevation Variation
-} Biome;
+//typedef struct Biome
+//{
+//	int id;
+//
+//	//float biomeTerrainElevationVariation; //Specific Biome Elevation Variation
+//} Biome;
 
 typedef struct {
 	double zoom;
@@ -45,8 +44,8 @@ typedef struct WorldInfoTopView2D
 
 	NoiseLayer* noiseLayers;
 
-	Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
-	int biomeCount; //Set to 0
+	//Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
+	//int biomeCount; //Set to 0
 
 	bool assureWaterPercentage; //Wether the generator should assure the percentage will be accurate but will require more processing time
 	float waterPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
@@ -69,7 +68,7 @@ bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config); //Validate S
 
 void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed); //Generates 2D world from a Top View
 
-void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
+//void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
 //--External
 
 //Internal

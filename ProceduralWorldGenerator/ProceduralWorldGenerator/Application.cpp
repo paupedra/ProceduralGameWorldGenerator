@@ -204,7 +204,7 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 
 void Application::GenerateWorld()
 {
-	topViewWorld->biomeCount = 0;
+	//topViewWorld->biomeCount = 0;
 	topViewWorld->width = width;
 	topViewWorld->height = height;
 	topViewWorld->assureWaterPercentage = uiTopViewWorld->assureWaterPercentage;
@@ -378,11 +378,6 @@ void Application::Render()
 	// Clear screen
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
-
-	for (int i = 0; i < entities.size(); ++i)
-	{
-		entities[i].Render(renderer, cameraPosition, zoom);
-	}
 
 	int windowW, windowH;
 	SDL_GetWindowSize(window, &windowW, &windowH);

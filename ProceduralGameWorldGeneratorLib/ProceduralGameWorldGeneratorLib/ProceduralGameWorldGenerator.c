@@ -27,12 +27,10 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
         {7.f * info->zoom, 0.35f},   // Medium-scale features
         {30.f * info->zoom, 0.05f}    // Small-scale details
     };
-
     int layer_count = sizeof(layers) / sizeof(layers[0]);
 
-    const int total_samples = info->width * info->height; // 1. Calculate total samples and how many should be water
-
-    float* values = malloc(total_samples * sizeof(float)); // 2. Create storage for all noise values
+    const int total_samples = info->width * info->height;
+    float* values = malloc(total_samples * sizeof(float));
     float* sortValues = NULL;
 
     if(info->assureWaterPercentage)
@@ -45,7 +43,7 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
 
     float nx = 0.f, ny = 0.f, total = 0.f, weightSum = 0.f, noise = 0.f;
 
-    for (int y = 0; y < info->height; y++)  // 3. Generate noise values across a grid
+    for (int y = 0; y < info->height; y++)
     {
         for (int x = 0; x < info->width; x++) 
         {
@@ -118,7 +116,6 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
             }
             
 
-            //Terrain Elevation
         }
     }
 
@@ -131,13 +128,13 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     float finalWaterPercent = ((float)waterTiles / (float)(info->width * info->height))* 100.f;
 }
 
-void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome)
-{
-    assert(worldInfo->biomeCount < MAX_BIOMES); //Make sure you don't add more biomes than MAXBIOMES
-
-    worldInfo->biomes[worldInfo->biomeCount] = biome;
-    worldInfo->biomeCount++;
-}
+//void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome)
+//{
+//    assert(worldInfo->biomeCount < MAX_BIOMES); //Make sure you don't add more biomes than MAXBIOMES
+//
+//    worldInfo->biomes[worldInfo->biomeCount] = biome;
+//    worldInfo->biomeCount++;
+//}
 
 void AllocateTiles(WorldInfoTopView2D* info)
 {
@@ -150,7 +147,6 @@ void AllocateTiles(WorldInfoTopView2D* info)
     }
 
     info->tiles = (Tile*)calloc(info->height * info->width, sizeof(Tile));
-    if (!info->tiles) return;
 }
 
 float ZoomablePerlinNoise3Seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed)
