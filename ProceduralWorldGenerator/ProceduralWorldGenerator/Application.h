@@ -1,7 +1,7 @@
 #pragma once
 #include "Position.h"
 #include "Color.h"
-#include "UISlider.h"
+#include "UIElement.h"
 #include <vector>
 
 constexpr int WIDTH = 200;

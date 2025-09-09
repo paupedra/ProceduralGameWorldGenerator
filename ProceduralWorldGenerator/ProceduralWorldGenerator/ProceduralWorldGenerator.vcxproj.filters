@@ -24,7 +24,7 @@
     <ClCompile Include="Position.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UISlider.cpp">
+    <ClCompile Include="UIElement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,7 +35,7 @@
     <ClInclude Include="Position.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="UISlider.h">
+    <ClInclude Include="UIElement.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Color.h">

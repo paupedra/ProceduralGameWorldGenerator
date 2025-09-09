@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <time.h>
 
 #define STB_PERLIN_IMPLEMENTATION
 #include "stb_perlin.h"
@@ -21,20 +22,19 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
 {
     AllocateTiles(info);
 
-    // Define noise layers
     NoiseLayer layers[] = {
-        {1.f * info->zoom, 0.60f},  // Large-scale continental shapes
-        {7.f * info->zoom, 0.35f},   // Medium-scale features
-        {30.f * info->zoom, 0.05f}    // Small-scale details
+        {1.f * info->zoom, 0.6f, 0.f},  // Large-scale continental shapes
+        {5.f * info->zoom, 0.35f, 0.f},   // Medium-scale features
+        {30.f * info->zoom, 0.05f, 0.f}    // Small-scale details
     };
     int layer_count = sizeof(layers) / sizeof(layers[0]);
 
-    const int total_samples = info->width * info->height;
-    float* values = malloc(total_samples * sizeof(float));
+    const int totalSamples = info->width * info->height;
+    float* values = malloc(totalSamples * sizeof(float));
     float* sortValues = NULL;
 
     if(info->assureWaterPercentage)
-        sortValues = malloc(total_samples * sizeof(float));
+        sortValues = malloc(totalSamples * sizeof(float));
 
     float biggerSize = info->width;
 
@@ -55,7 +55,7 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
 
             for (int i = 0; i < layer_count; i++) 
             {
-                noise = ZoomablePerlinNoise3Seed(layers[i].zoom, nx, ny, 0, 0, 0, 0, seed); // From -0.5 to 0.5
+                noise = ZoomablePerlinNoise3Seed(layers[i].zoom, layers[i].variation, nx, ny, 0, 0, 0, 0, seed); // From -0.5 to 0.5
                 total += noise * layers[i].weight;
                 weightSum += layers[i].weight;
             }
@@ -63,7 +63,7 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
             if(values)
                 values[y * info->width + x] = total / weightSum;
 
-            if(info->assureWaterPercentage)
+            if(info->assureWaterPercentage && sortValues)
                 sortValues[y * info->width + x] = total / weightSum;
         }
     }
@@ -71,10 +71,10 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     float waterThreshold = 0.f;
     if (info->assureWaterPercentage)
     {
-        QuickSort(sortValues, 0, total_samples - 1); // 4. Sort all noise values from lowest to highest
+        QuickSort(sortValues, 0, totalSamples - 1);
         
         if(sortValues)
-            waterThreshold = sortValues[(int)(total_samples * info->waterPercent / 100.0)]; // 5. Find the threshold value at our target position
+            waterThreshold = sortValues[(int)(totalSamples * info->waterPercent / 100.0)];
     }
     else
     {
@@ -90,6 +90,8 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
             //Biome Distribution
                 //Create Biomes
                    //If rules make "beach" area arround big bodies of water
+
+
 
             float beachThreshhold = waterThreshold + (info->beachPercent / 100) * (0.5f - waterThreshold);
             if (values)
@@ -117,6 +119,16 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
             
 
         }
+    }
+
+    srand(time(NULL));
+
+    for (int i = 0; i < 5; ++i)
+    {
+        int x = RandomRange(0, info->width);
+        int y = RandomRange(0, info->height);
+
+
     }
 
     if(sortValues)
@@ -149,9 +161,9 @@ void AllocateTiles(WorldInfoTopView2D* info)
     info->tiles = (Tile*)calloc(info->height * info->width, sizeof(Tile));
 }
 
-float ZoomablePerlinNoise3Seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed)
+float ZoomablePerlinNoise3Seed(float zoom, float variation, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed)
 {
-    return stb_perlin_noise3_seed(x * zoom, y * zoom, 0, 0, 0, 0, seed);
+    return stb_perlin_noise3_seed(x * zoom + variation, y * zoom + variation, 0, 0, 0, 0, seed);
 }
 
 int CompareFloats(const void* a, const void* b)
@@ -190,4 +202,8 @@ void QuickSort(float arr[], int low, int high) // QuickSort function for floats
         QuickSort(arr, low, pi - 1);        // Sort left subarray
         QuickSort(arr, pi + 1, high);        // Sort right subarray
     }
+}
+
+int RandomRange(int min, int max) {
+    return rand() % (max - min + 1) + min;
 }

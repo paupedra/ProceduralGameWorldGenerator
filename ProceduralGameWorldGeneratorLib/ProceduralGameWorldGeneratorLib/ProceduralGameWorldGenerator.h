@@ -29,8 +29,9 @@ typedef struct BiomeTile
 //} Biome;
 
 typedef struct {
-	double zoom;
-	double weight;
+	float zoom;
+	float weight;
+	float variation;
 } NoiseLayer;
 // -- General Data Structs
 
@@ -44,15 +45,16 @@ typedef struct WorldInfoTopView2D
 
 	NoiseLayer* noiseLayers;
 
-	//Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
-	//int biomeCount; //Set to 0
-
 	bool assureWaterPercentage; //Wether the generator should assure the percentage will be accurate but will require more processing time
 	float waterPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
 
-	bool addBeach;
-	float beachPercent;
+	bool addBeach; //Wether the generator should generate beach
+	float beachPercent; //In percentage from 0 to 99 the percentage of the land that should be beach sand
 	
+	//-- Future Implementations
+	//Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
+	//int biomeCount; //Set to 0
+
 	//bool waterHasElevation; //Weather want to assign elevation to bodies of water
 	//int maxTerrainElevation, minTerrainElevation; //In units maximum and minimum elevation in the whole world
 	//int terrainElevationVariation; //How common it is to have more variation in elevation
@@ -62,7 +64,6 @@ typedef struct WorldInfoTopView2D
 
 // --- FUNCTIONS ----
 
-// Generation Functions
 //External
 bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config); //Validate Struct Before Generating World
 
@@ -72,21 +73,19 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed); //Generates 2D 
 //--External
 
 //Internal
-void AllocateTiles(WorldInfoTopView2D* info);
+void AllocateTiles(WorldInfoTopView2D* info); //Allocates memory for tiles array
 
-float ZoomablePerlinNoise3Seed(float zoom, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed);
-//--Internal
-// -- Generation Functions
+float ZoomablePerlinNoise3Seed(float zoom, float variation, float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed); //Calls Perlin and multiplies coordinates by zoom
 
 //QuickSort
 int CompareFloats(const void* a, const void* b);
-
 void Swap(float* a, float* b); // Swap two float elements
-
 int Partition(float arr[], int low, int high); // Partition the array and return the pivot index
-
 void QuickSort(float arr[], int low, int high); // QuickSort function for floats
 //--QuickSort
+
+int RandomRange(int min, int max);
+//--Internal
 
 #ifdef __cplusplus
 }

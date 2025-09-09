@@ -1,6 +1,7 @@
 #include "Application.h"
 #include <iostream>
 #include <array>
+#include <windows.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -8,8 +9,6 @@
 
 bool Application::Init()
 {
-	//(AGUNSEGUIR_MOLDS_DINERS)
-
 	window = SDL_CreateWindow("Hello World", 800, 600, SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		SDL_Log("Couldn't create window: %s", SDL_GetError());
@@ -36,7 +35,7 @@ bool Application::Init()
 	topViewWorld = new WorldInfoTopView2D();
 	topViewWorld->tiles = nullptr;
 
-	GenerateWorld(); //Call Library Here
+	GenerateWorld();
 
 	cameraPosition.x = (windowW / 2) - (zoom * width / 2);
 	cameraPosition.y = (windowH / 2) - (zoom * height / 2);
