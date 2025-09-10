@@ -126,10 +126,10 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 
 	width = WIDTH;
 	height = HEIGHT;
-	uiTopViewWorld->waterPercent = 40.f;
-	uiTopViewWorld->assureWaterPercentage = false;
+	uiTopViewWorld->waterPercent = 50.f;
+	uiTopViewWorld->assurePercentages = true;
 	uiTopViewWorld->addBeach = true;
-	uiTopViewWorld->beachPercent = 10.f;
+	uiTopViewWorld->beachPercent = 20.f;
 	uiTopViewWorld->zoom = 2.f;
 
 	font = TTF_OpenFont("Assets/Fonts/console.ttf", 18);
@@ -187,8 +187,8 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 		sliders[i].Init(renderer, font);
 	}
 
-	UIButton* button = new UIButton(&uiTopViewWorld->assureWaterPercentage);
-	button->string = "Assure Water";
+	UIButton* button = new UIButton(&uiTopViewWorld->assurePercentages);
+	button->string = "Assure Percentages";
 	buttons.push_back(*button);
 
 	button = new UIButton(&uiTopViewWorld->addBeach);
@@ -206,7 +206,7 @@ void Application::GenerateWorld()
 	//topViewWorld->biomeCount = 0;
 	topViewWorld->width = width;
 	topViewWorld->height = height;
-	topViewWorld->assureWaterPercentage = uiTopViewWorld->assureWaterPercentage;
+	topViewWorld->assurePercentages = uiTopViewWorld->assurePercentages;
 	topViewWorld->waterPercent = uiTopViewWorld->waterPercent;
 	topViewWorld->zoom = uiTopViewWorld->zoom;
 	topViewWorld->addBeach = uiTopViewWorld->addBeach;
@@ -227,15 +227,27 @@ void Application::GenerateWorld()
 			{
 				if (topViewWorld->tiles[y* topViewWorld->width + x].tileId == 1)//Land
 				{
-					color = Color(0, 255, 0, 255);
+					color = Color(0, 200, 0, 255);
 				}
 				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 2)//Water
 				{
-					color = Color(0, 0, 255, 255);
+					color = Color(0, 0, 200, 255);
 				}
 				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 3)//Beach
 				{
-					color = Color(255, 255, 0, 255);
+					color = Color(255, 255, 204, 255);
+				}
+				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 4)//Beach
+				{
+					color = Color(0, 0, 255, 255);
+				}
+				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 5)//Beach
+				{
+					color = Color(128, 128, 128, 255);
+				}
+				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 6)//Beach
+				{
+					color = Color(139, 69, 19, 255);
 				}
 			}
 

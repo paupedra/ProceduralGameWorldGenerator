@@ -45,7 +45,8 @@ typedef struct WorldInfoTopView2D
 
 	NoiseLayer* noiseLayers;
 
-	bool assureWaterPercentage; //Wether the generator should assure the percentage will be accurate but will require more processing time
+	bool assurePercentages; //Wether the generator should assure the percentage will be accurate but will require more processing time
+
 	float waterPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
 
 	bool addBeach; //Wether the generator should generate beach

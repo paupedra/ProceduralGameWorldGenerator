@@ -33,7 +33,7 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     float* values = malloc(totalSamples * sizeof(float));
     float* sortValues = NULL;
 
-    if(info->assureWaterPercentage)
+    if(info->assurePercentages)
         sortValues = malloc(totalSamples * sizeof(float));
 
     float biggerSize = info->width;
@@ -63,22 +63,24 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
             if(values)
                 values[y * info->width + x] = total / weightSum;
 
-            if(info->assureWaterPercentage && sortValues)
+            if(info->assurePercentages && sortValues)
                 sortValues[y * info->width + x] = total / weightSum;
         }
     }
 
     float waterThreshold = 0.f;
-    if (info->assureWaterPercentage)
+    float beachThreshhold = 0.f;
+    if (info->assurePercentages && sortValues)
     {
         QuickSort(sortValues, 0, totalSamples - 1);
-        
-        if(sortValues)
-            waterThreshold = sortValues[(int)(totalSamples * info->waterPercent / 100.0)];
+        int waterSortPos = (int)(totalSamples * info->waterPercent / 100.0);
+        waterThreshold = sortValues[waterSortPos];
+        beachThreshhold = sortValues[(int)(waterSortPos + ((totalSamples - waterSortPos) * info->beachPercent / 100.0))];
     }
     else
     {
         waterThreshold = (info->waterPercent / 100.f) -0.5f;
+        beachThreshhold = waterThreshold + (info->beachPercent / 100) * (0.5f - waterThreshold);
     }
 
     int waterTiles = 0, landTiles = 0;
@@ -91,24 +93,34 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
                 //Create Biomes
                    //If rules make "beach" area arround big bodies of water
 
-
-
-            float beachThreshhold = waterThreshold + (info->beachPercent / 100) * (0.5f - waterThreshold);
             if (values)
             {
                 if (values[y * info->width + x] > waterThreshold)
                 {
-                    info->tiles[y*info->width +x].tileId = 1; //Land
+                    info->tiles[y * info->width + x].tileId = 1; //Land
                     landTiles++;
 
                     if (info->addBeach)
                     {
-
                         if (values[y * info->width + x] < beachThreshhold)
                         {
                             info->tiles[y * info->width + x].tileId = 3; //Beach
                         }
                     }
+
+                    //if (values[y * info->width + x] > 0.2f)
+                    //{
+                    //    info->tiles[y * info->width + x].tileId = 4; //Land
+                    //}
+                    //if (values[y * info->width + x] > 0.20f)
+                    //{
+                    //    info->tiles[y * info->width + x].tileId = 5; //Land
+                    //}
+                    //if (values[y * info->width + x] > 0.3f)
+                    //{
+                    //    info->tiles[y * info->width + x].tileId = 6; //Land
+                    //}
+
                 }
                 if (values[y * info->width + x] <= waterThreshold)
                 {
@@ -116,19 +128,40 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
                     waterTiles++;
                 }
             }
-            
 
         }
     }
 
-    srand(time(NULL));
+    srand(seed);
 
     for (int i = 0; i < 5; ++i)
     {
         int x = RandomRange(0, info->width);
         int y = RandomRange(0, info->height);
 
+        int rep = RandomRange(50, 100);
 
+        for (int j = 0; j < rep; ++j)
+        {
+            int width = RandomRange(1, 4);
+            for (int yn = 0; yn < width; yn++) {
+                for (int xn = 0; xn < width; xn++) {
+                    // Calculate distance from center
+                    float distance = sqrt(pow((xn+x) - x, 2) + pow((yn +y) - y, 2));
+
+                    // Check if point is inside the circle
+                    if (distance <= 5) {
+                        info->tiles[(y + yn) * info->width + (x + xn)].tileId = 4; //River// Filled tile
+                    }
+                }
+
+            }
+
+
+
+            //x += RandomRange(-2, 2);
+            //y += RandomRange(-2, 2);
+        }
     }
 
     if(sortValues)
