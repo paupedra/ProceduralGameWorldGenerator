@@ -23,14 +23,22 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     AllocateTiles(info);
 
     NoiseLayer layers[] = {
-        {1.f * info->zoom, 0.6f, 0.f},  // Large-scale continental shapes
-        {5.f * info->zoom, 0.35f, 0.f},   // Medium-scale features
+        {0.5f * info->zoom, 0.7f, 0.f},  // Large-scale continental shapes
+        {5.f * info->zoom, 0.25f, 0.f},   // Medium-scale features
         {30.f * info->zoom, 0.05f, 0.f}    // Small-scale details
     };
-    int layer_count = sizeof(layers) / sizeof(layers[0]);
+    int layerCount = sizeof(layers) / sizeof(layers[0]);
+
+    NoiseLayer biomeLayers[] = {
+        {0.5f * info->zoom, 0.6f, 0.f},  // Large-scale continental shapes
+        {5.f * info->zoom, 0.35f, 0.f},   // Medium-scale features
+        {20.f * info->zoom, 0.05f, 0.f}    // Small-scale details
+    };
+    int biomeLayerCount = sizeof(layers) / sizeof(layers[0]);
 
     const int totalSamples = info->width * info->height;
     float* values = malloc(totalSamples * sizeof(float));
+    float* biomeValues = malloc(totalSamples * sizeof(float));
     float* sortValues = NULL;
 
     if(info->assurePercentages)
@@ -53,7 +61,7 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
             total = 0.0;
             weightSum = 0.0;
 
-            for (int i = 0; i < layer_count; i++) 
+            for (int i = 0; i < layerCount; i++) 
             {
                 noise = ZoomablePerlinNoise3Seed(layers[i].zoom, layers[i].variation, nx, ny, 0, 0, 0, 0, seed); // From -0.5 to 0.5
                 total += noise * layers[i].weight;
@@ -65,6 +73,20 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
 
             if(info->assurePercentages && sortValues)
                 sortValues[y * info->width + x] = total / weightSum;
+
+            //Biome
+            total = 0.0;
+            weightSum = 0.0;
+
+            for (int i = 0; i < biomeLayerCount; i++)
+            {
+                noise = ZoomablePerlinNoise3Seed(biomeLayers[i].zoom, biomeLayers[i].variation, nx + 1, ny + 1, 0, 0, 0, 0, seed); // From -0.5 to 0.5
+                total += noise * biomeLayers[i].weight;
+                weightSum += biomeLayers[i].weight;
+            }
+
+            if (biomeValues)
+                biomeValues[y * info->width + x] = total / weightSum;
         }
     }
 
@@ -89,9 +111,23 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     {
         for (int x = 0; x < info->width; ++x)
         {
-            //Biome Distribution
-                //Create Biomes
-                   //If rules make "beach" area arround big bodies of water
+            //assign biome based on values
+            if (biomeValues[y * info->width + x] < -0.10)
+            {
+                info->tiles[y * info->width + x].biomeId = 0;
+            }
+            if (biomeValues[y * info->width + x] < -0.40)
+            {
+                info->tiles[y * info->width + x].tileId = 4; //River
+            }
+            if (biomeValues[y * info->width + x] > -0.10 && biomeValues[y * info->width + x] < 0.10)
+            {
+                info->tiles[y * info->width + x].biomeId = 1;
+            }
+            if (biomeValues[y * info->width + x] > 0.10)
+            {
+                info->tiles[y * info->width + x].biomeId = 2;
+            }
 
             if (values)
             {
@@ -108,19 +144,6 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
                         }
                     }
 
-                    //if (values[y * info->width + x] > 0.2f)
-                    //{
-                    //    info->tiles[y * info->width + x].tileId = 4; //Land
-                    //}
-                    //if (values[y * info->width + x] > 0.20f)
-                    //{
-                    //    info->tiles[y * info->width + x].tileId = 5; //Land
-                    //}
-                    //if (values[y * info->width + x] > 0.3f)
-                    //{
-                    //    info->tiles[y * info->width + x].tileId = 6; //Land
-                    //}
-
                 }
                 if (values[y * info->width + x] <= waterThreshold)
                 {
@@ -132,37 +155,75 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
         }
     }
 
-    srand(seed);
+    //srand(seed);
 
-    for (int i = 0; i < 5; ++i)
-    {
-        int x = RandomRange(0, info->width);
-        int y = RandomRange(0, info->height);
+    //for (int i = 0; i < 5; ++i)
+    //{
+    //    int x = RandomRange(0, info->width);
+    //    int y = RandomRange(0, info->height);
 
-        int rep = RandomRange(50, 100);
+    //    int rep = RandomRange(50, 100);
 
-        for (int j = 0; j < rep; ++j)
-        {
-            int width = RandomRange(1, 4);
-            for (int yn = 0; yn < width; yn++) {
-                for (int xn = 0; xn < width; xn++) {
-                    // Calculate distance from center
-                    float distance = sqrt(pow((xn+x) - x, 2) + pow((yn +y) - y, 2));
+    //    for (int j = 0; j < rep; ++j)
+    //    {
+    //        int width = ZoomablePerlinNoise3Seed(1, x, y, 0, 0, 0, 0, 0, seed);
 
-                    // Check if point is inside the circle
-                    if (distance <= 5) {
-                        info->tiles[(y + yn) * info->width + (x + xn)].tileId = 4; //River// Filled tile
-                    }
-                }
+    //        if (width < 0)
+    //        {
+    //            width = (width - 1) * 2;
+    //        }
+    //        else
+    //        {
+    //            width = (width + 1) * 2;
+    //        }
 
+    //        
+    //        for (int yn = 0; yn < width; yn++) {
+    //            for (int xn = 0; xn < width; xn++) {
+    //                // Calculate distance from center
+    //                float distance = sqrt(pow((xn+x) - x, 2) + pow((yn +y) - y, 2));
+
+    //                // Check if point is inside the circle
+    //                if (distance <= 5) {
+    //                    info->tiles[(y + yn) * info->width + (x + xn)].tileId = 4; //River// Filled tile
+    //                }
+    //            }
+
+    //        }
+
+            /*
+            double scale = 0.05;
+
+            float dx = ZoomablePerlinNoise3Seed(1, x * scale, y * scale, 0, 0, 0, 0, 0, seed);
+            float dy = ZoomablePerlinNoise3Seed(1, x * scale  + 5, y * scale + 5, 0, 0, 0, 0, 0, seed);
+
+            // Normalize and scale the vector
+            float length = sqrt(dx * dx + dy * dy);
+            if (length > 0) {
+                dx /= length;
+                dy /= length;
             }
 
-
-
-            //x += RandomRange(-2, 2);
-            //y += RandomRange(-2, 2);
-        }
-    }
+            if (dx < 0)
+            {
+                x += (dx - 1) * width;
+            }
+            else
+            {
+                x += (dx + 1) * width;
+            }
+            
+            if (dy < 0)
+            {
+                y += (dy - 1) * width;
+            }
+            else
+            {
+                y += (dy + 1) * width;
+            }
+            */
+        //}
+    //}
 
     if(sortValues)
         free(sortValues);
@@ -170,16 +231,19 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     if(values)
         free(values);
 
+    if (biomeValues)
+        free(biomeValues);
+
     float finalWaterPercent = ((float)waterTiles / (float)(info->width * info->height))* 100.f;
 }
 
-//void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome)
-//{
-//    assert(worldInfo->biomeCount < MAX_BIOMES); //Make sure you don't add more biomes than MAXBIOMES
-//
-//    worldInfo->biomes[worldInfo->biomeCount] = biome;
-//    worldInfo->biomeCount++;
-//}
+void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome)
+{
+    assert(worldInfo->biomeCount < MAX_BIOMES); //Make sure you don't add more biomes than MAXBIOMES
+
+    worldInfo->biomes[worldInfo->biomeCount] = biome;
+    worldInfo->biomeCount++;
+}
 
 void AllocateTiles(WorldInfoTopView2D* info)
 {

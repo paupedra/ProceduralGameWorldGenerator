@@ -13,20 +13,20 @@ extern "C" {
 typedef struct Tile
 {
 	int tileId; //Represents the type of final tile
-	//int biomeId;
+	int biomeId;
 } Tile;
 
-typedef struct BiomeTile
-{
-	int tileId;
-} BiomeTile;
-
-//typedef struct Biome
+//typedef struct BiomeTile
 //{
-//	int id;
-//
-//	//float biomeTerrainElevationVariation; //Specific Biome Elevation Variation
-//} Biome;
+//	int tileId;
+//} BiomeTile;
+
+typedef struct Biome
+{
+	int id;
+	int tileId;
+	//float biomeTerrainElevationVariation; //Specific Biome Elevation Variation
+} Biome;
 
 typedef struct {
 	float zoom;
@@ -53,8 +53,8 @@ typedef struct WorldInfoTopView2D
 	float beachPercent; //In percentage from 0 to 99 the percentage of the land that should be beach sand
 	
 	//-- Future Implementations
-	//Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
-	//int biomeCount; //Set to 0
+	Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
+	int biomeCount; //Set to 0
 
 	//bool waterHasElevation; //Weather want to assign elevation to bodies of water
 	//int maxTerrainElevation, minTerrainElevation; //In units maximum and minimum elevation in the whole world
@@ -70,7 +70,7 @@ bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config); //Validate S
 
 void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed); //Generates 2D world from a Top View
 
-//void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
+void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
 //--External
 
 //Internal

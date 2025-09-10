@@ -203,7 +203,7 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 
 void Application::GenerateWorld()
 {
-	//topViewWorld->biomeCount = 0;
+	
 	topViewWorld->width = width;
 	topViewWorld->height = height;
 	topViewWorld->assurePercentages = uiTopViewWorld->assurePercentages;
@@ -211,6 +211,17 @@ void Application::GenerateWorld()
 	topViewWorld->zoom = uiTopViewWorld->zoom;
 	topViewWorld->addBeach = uiTopViewWorld->addBeach;
 	topViewWorld->beachPercent = uiTopViewWorld->beachPercent;
+
+	topViewWorld->biomeCount = 0;
+
+	Biome biome{ 0, 5};
+	AddBiome(topViewWorld,biome);
+	biome.id = 1;
+	biome.tileId = 6;
+	AddBiome(topViewWorld, biome);
+	biome.id = 2;
+	biome.tileId = 7;
+	AddBiome(topViewWorld, biome);
 
 	seed = SDL_rand(10000000000);
 
@@ -228,6 +239,22 @@ void Application::GenerateWorld()
 				if (topViewWorld->tiles[y* topViewWorld->width + x].tileId == 1)//Land
 				{
 					color = Color(0, 200, 0, 255);
+
+					int biomeTileId = topViewWorld->biomes[topViewWorld->tiles[y * topViewWorld->width + x].biomeId].tileId;
+					
+
+					if (biomeTileId == 5)//Biome 1
+					{
+						color = Color(128, 128, 128, 255);
+					}
+					if (biomeTileId == 6)//Biome 2
+					{
+						color = Color(139, 69, 19, 255);
+					}
+					if (biomeTileId == 7)//Biome 3
+					{
+						color = Color(0, 69, 19, 255);
+					}
 				}
 				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 2)//Water
 				{
@@ -237,18 +264,11 @@ void Application::GenerateWorld()
 				{
 					color = Color(255, 255, 204, 255);
 				}
-				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 4)//Beach
+				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 4)//River
 				{
-					color = Color(0, 0, 255, 255);
+					color = Color(0, 0, 200, 255);
 				}
-				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 5)//Beach
-				{
-					color = Color(128, 128, 128, 255);
-				}
-				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 6)//Beach
-				{
-					color = Color(139, 69, 19, 255);
-				}
+				
 			}
 
 			pixels[y * topViewWorld->width + x] = (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a;
@@ -260,7 +280,8 @@ void Application::GenerateWorld()
 	mapTextureDst->w = topViewWorld->width;
 	mapTextureDst->h = topViewWorld->height;
 
-	SDL_DestroyTexture(mapTexture);
+	if(mapTexture)
+		SDL_DestroyTexture(mapTexture);
 
 	mapTexture = SDL_CreateTexture(renderer,
 		SDL_PIXELFORMAT_RGBA8888,
