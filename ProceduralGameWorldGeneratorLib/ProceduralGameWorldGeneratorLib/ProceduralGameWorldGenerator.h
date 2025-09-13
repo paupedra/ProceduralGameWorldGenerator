@@ -2,8 +2,6 @@
 #include <stdbool.h>
 
 #define MAX_NOISE_LAYERS 10
-#define MAX_TEMP 3
-#define MAX_HEIGHT 3
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +23,7 @@ typedef struct Biome
 
 typedef enum BiomeHeight
 {
+	ELEV_COUNT = 3,
 	ELEV_HIGH = 2,
 	ELEV_MEDIUM = 1,
 	ELEV_LOW = 0
@@ -32,6 +31,7 @@ typedef enum BiomeHeight
 
 typedef enum BiomeTemperature
 {
+	TEMP_COUNT = 3,
 	TEMP_HIGH = 2,
 	TEMP_MEDIUM = 1,
 	TEMP_LOW = 0
@@ -68,7 +68,7 @@ typedef struct WorldInfoTopView2D
 	bool addBeach; //Wether the generator should generate beach
 	float beachPercent; //In percentage from 0 to 99 the percentage of the land that should be beach sand
 	
-	Biome biomes[MAX_HEIGHT][MAX_TEMP]; //Input: Array of Biomes, to be set by the user
+	Biome biomes[ELEV_COUNT][TEMP_COUNT]; //Input: Array of Biomes, to be set by the user
 
 } WorldInfoTopView2D;
 // -- World Infos Structs
