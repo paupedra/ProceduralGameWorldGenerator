@@ -4,8 +4,8 @@
 #include "UIElement.h"
 #include <vector>
 
-constexpr int WIDTH = 200;
-constexpr int HEIGHT = 200;
+constexpr int WIDTH = 500;
+constexpr int HEIGHT = 500;
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -67,7 +67,7 @@ public:
 	int lastSecFrames = 0;
 	int prevLastSecFrames = 0;
 
-	float zoom = 2.f;
+	float zoom = 1.f;
 	float zoomSpeed = 0.25f;
 	int cameraSpeed = 200;
 

@@ -1,7 +1,9 @@
 #pragma once
 #include <stdbool.h>
 
-#define MAX_BIOMES 16
+#define MAX_NOISE_LAYERS 10
+#define MAX_TEMP 3
+#define MAX_HEIGHT 3
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,21 +14,28 @@ extern "C" {
 // General Data Structs
 typedef struct Tile
 {
-	int tileId; //Represents the type of final tile
+	int tileId;
 	int biomeId;
 } Tile;
-
-//typedef struct BiomeTile
-//{
-//	int tileId;
-//} BiomeTile;
-
 typedef struct Biome
 {
 	int id;
 	int tileId;
-	//float biomeTerrainElevationVariation; //Specific Biome Elevation Variation
 } Biome;
+
+typedef enum BiomeHeight
+{
+	ELEV_HIGH = 2,
+	ELEV_MEDIUM = 1,
+	ELEV_LOW = 0
+} BiomeHeight;
+
+typedef enum BiomeTemperature
+{
+	TEMP_HIGH = 2,
+	TEMP_MEDIUM = 1,
+	TEMP_LOW = 0
+} BiomeTemperature;
 
 typedef struct {
 	float zoom;
@@ -43,22 +52,24 @@ typedef struct WorldInfoTopView2D
 	int width, height; //Input: Width and Height of the map in tiles
 	float zoom; //Input: Default to 1, sets the zoom for the noise, if the map is bigger a bigger zoom is recommended
 
-	NoiseLayer* noiseLayers;
+	NoiseLayer elevationNoiseLayers[MAX_NOISE_LAYERS];
+	int elevationNoiseLayersCount; //INITIALIZE TO 0
+	NoiseLayer biomeNoiseLayers[MAX_NOISE_LAYERS];
+	int biomeNoiseLayersCount; //INITIALIZE TO 0
 
 	bool assurePercentages; //Wether the generator should assure the percentage will be accurate but will require more processing time
 
-	float waterPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
+	float lowElevationPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
+	float midElevationPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
+
+	float lowTempPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
+	float midTempPercent; //In percentage from 0 to 99 the percentage of the world which will be bodies of water
 
 	bool addBeach; //Wether the generator should generate beach
 	float beachPercent; //In percentage from 0 to 99 the percentage of the land that should be beach sand
 	
-	//-- Future Implementations
-	Biome biomes[MAX_BIOMES]; //Input: Array of Biomes, to be set by the user
-	int biomeCount; //Set to 0
+	Biome biomes[MAX_HEIGHT][MAX_TEMP]; //Input: Array of Biomes, to be set by the user
 
-	//bool waterHasElevation; //Weather want to assign elevation to bodies of water
-	//int maxTerrainElevation, minTerrainElevation; //In units maximum and minimum elevation in the whole world
-	//int terrainElevationVariation; //How common it is to have more variation in elevation
 } WorldInfoTopView2D;
 // -- World Infos Structs
 
@@ -70,7 +81,8 @@ bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config); //Validate S
 
 void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed); //Generates 2D world from a Top View
 
-void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome);
+void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome, BiomeHeight height, BiomeTemperature temperature);
+
 //--External
 
 //Internal
@@ -84,8 +96,6 @@ void Swap(float* a, float* b); // Swap two float elements
 int Partition(float arr[], int low, int high); // Partition the array and return the pivot index
 void QuickSort(float arr[], int low, int high); // QuickSort function for floats
 //--QuickSort
-
-int RandomRange(int min, int max);
 //--Internal
 
 #ifdef __cplusplus

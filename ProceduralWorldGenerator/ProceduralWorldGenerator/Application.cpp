@@ -1,7 +1,4 @@
 #include "Application.h"
-#include <iostream>
-#include <array>
-#include <windows.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -9,7 +6,7 @@
 
 bool Application::Init()
 {
-	window = SDL_CreateWindow("Hello World", 800, 600, SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("Hello World", 1000, 600, SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		SDL_Log("Couldn't create window: %s", SDL_GetError());
 		return false;
@@ -126,7 +123,10 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 
 	width = WIDTH;
 	height = HEIGHT;
-	uiTopViewWorld->waterPercent = 50.f;
+	uiTopViewWorld->lowElevationPercent = 50.f;
+	uiTopViewWorld->midElevationPercent = 75.f;
+	uiTopViewWorld->lowTempPercent = 20.f;
+	uiTopViewWorld->midTempPercent = 70.f;
 	uiTopViewWorld->assurePercentages = true;
 	uiTopViewWorld->addBeach = true;
 	uiTopViewWorld->beachPercent = 20.f;
@@ -161,11 +161,32 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 	zoomSlider->string = "HEIGHT";
 	sliders.push_back(*zoomSlider);
 
-	zoomSlider = new UISlider(&uiTopViewWorld->waterPercent);
+	zoomSlider = new UISlider(&uiTopViewWorld->lowElevationPercent);
 	zoomSlider->valueIncrements = 1;
 	zoomSlider->minValue = 0.f;
 	zoomSlider->maxValue = 99.f;
-	zoomSlider->string = "WATER %";
+	zoomSlider->string = "Low Elev %";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&uiTopViewWorld->midElevationPercent);
+	zoomSlider->valueIncrements = 1;
+	zoomSlider->minValue = 0.f;
+	zoomSlider->maxValue = 99.f;
+	zoomSlider->string = "Mid Elev %";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&uiTopViewWorld->lowTempPercent);
+	zoomSlider->valueIncrements = 1;
+	zoomSlider->minValue = 0.f;
+	zoomSlider->maxValue = 99.f;
+	zoomSlider->string = "Low Temp %";
+	sliders.push_back(*zoomSlider);
+
+	zoomSlider = new UISlider(&uiTopViewWorld->midTempPercent);
+	zoomSlider->valueIncrements = 1;
+	zoomSlider->minValue = 0.f;
+	zoomSlider->maxValue = 99.f;
+	zoomSlider->string = "Mid Temp %";
 	sliders.push_back(*zoomSlider);
 
 	zoomSlider = new UISlider(&uiTopViewWorld->beachPercent);
@@ -203,25 +224,38 @@ void Application::InitUISliders(SDL_Renderer* renderer)
 
 void Application::GenerateWorld()
 {
-	
 	topViewWorld->width = width;
 	topViewWorld->height = height;
 	topViewWorld->assurePercentages = uiTopViewWorld->assurePercentages;
-	topViewWorld->waterPercent = uiTopViewWorld->waterPercent;
+	topViewWorld->lowElevationPercent = uiTopViewWorld->lowElevationPercent;
+	topViewWorld->midElevationPercent = uiTopViewWorld->midElevationPercent;
+	topViewWorld->lowTempPercent = uiTopViewWorld->lowTempPercent;
+	topViewWorld->midTempPercent = uiTopViewWorld->midTempPercent;
 	topViewWorld->zoom = uiTopViewWorld->zoom;
 	topViewWorld->addBeach = uiTopViewWorld->addBeach;
 	topViewWorld->beachPercent = uiTopViewWorld->beachPercent;
 
-	topViewWorld->biomeCount = 0;
+	Biome ocean      { 0, 0 }; 
+	Biome desert     { 1, 1 };
+	Biome frostPeak  { 2, 2 };
+	Biome forest     { 3, 3 };
+	Biome mountain   { 4, 4 };
+	Biome glaciar    { 5, 5 };
+	Biome hotMountain{ 6, 6 };
+	Biome frostForest{ 7, 7 };
+	Biome beach      { 8, 8 };
 
-	Biome biome{ 0, 5};
-	AddBiome(topViewWorld,biome);
-	biome.id = 1;
-	biome.tileId = 6;
-	AddBiome(topViewWorld, biome);
-	biome.id = 2;
-	biome.tileId = 7;
-	AddBiome(topViewWorld, biome);
+	AddBiome(topViewWorld, glaciar, BiomeHeight::ELEV_LOW, BiomeTemperature::TEMP_LOW);
+	AddBiome(topViewWorld, ocean, BiomeHeight::ELEV_LOW, BiomeTemperature::TEMP_MEDIUM);
+	AddBiome(topViewWorld, ocean, BiomeHeight::ELEV_LOW, BiomeTemperature::TEMP_HIGH);
+
+	AddBiome(topViewWorld, frostForest, BiomeHeight::ELEV_MEDIUM, BiomeTemperature::TEMP_LOW);
+	AddBiome(topViewWorld, forest, BiomeHeight::ELEV_MEDIUM, BiomeTemperature::TEMP_MEDIUM);
+	AddBiome(topViewWorld, desert, BiomeHeight::ELEV_MEDIUM, BiomeTemperature::TEMP_HIGH);
+
+	AddBiome(topViewWorld, frostPeak, BiomeHeight::ELEV_HIGH, BiomeTemperature::TEMP_LOW);
+	AddBiome(topViewWorld, mountain, BiomeHeight::ELEV_HIGH, BiomeTemperature::TEMP_MEDIUM);
+	AddBiome(topViewWorld, hotMountain, BiomeHeight::ELEV_HIGH, BiomeTemperature::TEMP_HIGH);
 
 	seed = SDL_rand(10000000000);
 
@@ -236,39 +270,37 @@ void Application::GenerateWorld()
 		{
 			if (topViewWorld->tiles)
 			{
-				if (topViewWorld->tiles[y* topViewWorld->width + x].tileId == 1)//Land
+				//Color color;
+				switch (topViewWorld->tiles[y * topViewWorld->width + x].tileId)
 				{
-					color = Color(0, 200, 0, 255);
-
-					int biomeTileId = topViewWorld->biomes[topViewWorld->tiles[y * topViewWorld->width + x].biomeId].tileId;
-					
-
-					if (biomeTileId == 5)//Biome 1
-					{
-						color = Color(128, 128, 128, 255);
-					}
-					if (biomeTileId == 6)//Biome 2
-					{
-						color = Color(139, 69, 19, 255);
-					}
-					if (biomeTileId == 7)//Biome 3
-					{
-						color = Color(0, 69, 19, 255);
-					}
+					case 0: //Ocean
+						color = Color(0,0,200,255); 
+						break;
+					case 1: //Desert
+						color = Color(236,236,60, 255);
+						break;
+					case 2: //Frost Peak
+						color = Color(93, 134, 171, 255);
+						break;
+					case 3: //Forest
+						color = Color(67, 199, 58, 255);
+						break;
+					case 4: //Mountain
+						color = Color(152, 152, 152, 255);
+						break;
+					case 5: //Glaciar
+						color = Color(176, 237, 255, 255);
+						break;
+					case 6: //Hot Mountain
+						color = Color(196, 98, 0, 255);
+						break;
+					case 7: //Frost Forest
+						color = Color(61, 223, 142, 255);
+						break;
+					case 8: //Beach
+						color = Color(255, 249, 156, 255);
+						break;
 				}
-				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 2)//Water
-				{
-					color = Color(0, 0, 200, 255);
-				}
-				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 3)//Beach
-				{
-					color = Color(255, 255, 204, 255);
-				}
-				if (topViewWorld->tiles[y * topViewWorld->width + x].tileId == 4)//River
-				{
-					color = Color(0, 0, 200, 255);
-				}
-				
 			}
 
 			pixels[y * topViewWorld->width + x] = (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a;

@@ -1,18 +1,14 @@
 #include "ProceduralGameWorldGenerator.h"
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 
 #define STB_PERLIN_IMPLEMENTATION
 #include "stb_perlin.h"
 
 bool WorldInfoTopView2D_Validate(const WorldInfoTopView2D* config)
 {
-
-    assert(config->waterPercent < 1 || config->waterPercent > 99); //WaterPercent cannot be smaller than 1 or bigger than 99
-
+    assert(config->lowElevationPercent < 1 || config->lowElevationPercent > 99); //WaterPercent cannot be smaller than 1 or bigger than 99
     assert(config->beachPercent < 1 || config->beachPercent > 99);  //BeachPercent cannot be smaller than 1 or bigger than 99
 
     return true;
@@ -23,26 +19,33 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     AllocateTiles(info);
 
     NoiseLayer layers[] = {
-        {0.5f * info->zoom, 0.7f, 0.f},  // Large-scale continental shapes
-        {5.f * info->zoom, 0.25f, 0.f},   // Medium-scale features
+        {1.5f * info->zoom, 0.35f, 0.f},  // Large-scale continental shapes
+        {1.5f * info->zoom, 0.35f, 1.f},
+        {7.f * info->zoom, 0.25f, 0.f},   // Medium-scale features
         {30.f * info->zoom, 0.05f, 0.f}    // Small-scale details
     };
     int layerCount = sizeof(layers) / sizeof(layers[0]);
 
-    NoiseLayer biomeLayers[] = {
-        {0.5f * info->zoom, 0.6f, 0.f},  // Large-scale continental shapes
-        {5.f * info->zoom, 0.35f, 0.f},   // Medium-scale features
-        {20.f * info->zoom, 0.05f, 0.f}    // Small-scale details
+    NoiseLayer temperatureLayers[] = {
+        {1.5f * info->zoom, 0.4f, 0.f},  // Large-scale continental shapes
+        {1.5f * info->zoom, 0.4f, 1.f},   // Medium-scale features
+        {5.f * info->zoom, 0.1f, 2.f},
+        {20.f * info->zoom, 0.1f, 0.f}    // Small-scale details
     };
-    int biomeLayerCount = sizeof(layers) / sizeof(layers[0]);
+    int temperatureLayerCount = sizeof(layers) / sizeof(layers[0]);
 
     const int totalSamples = info->width * info->height;
-    float* values = malloc(totalSamples * sizeof(float));
-    float* biomeValues = malloc(totalSamples * sizeof(float));
-    float* sortValues = NULL;
+    float* elevationValues = malloc(totalSamples * sizeof(float));
+    float* sortedElevationValues = NULL;
 
-    if(info->assurePercentages)
-        sortValues = malloc(totalSamples * sizeof(float));
+    float* temperatureValues = malloc(totalSamples * sizeof(float));
+    float* sortedTemperatureValues = NULL;
+
+    if (info->assurePercentages)
+    {
+        sortedElevationValues = malloc(totalSamples * sizeof(float));
+        sortedTemperatureValues = malloc(totalSamples * sizeof(float));
+    }
 
     float biggerSize = info->width;
 
@@ -68,41 +71,55 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
                 weightSum += layers[i].weight;
             }
 
-            if(values)
-                values[y * info->width + x] = total / weightSum;
+            if(elevationValues)
+                elevationValues[y * info->width + x] = total / weightSum;
 
-            if(info->assurePercentages && sortValues)
-                sortValues[y * info->width + x] = total / weightSum;
+            if(info->assurePercentages && sortedElevationValues)
+                sortedElevationValues[y * info->width + x] = total / weightSum;
 
-            //Biome
+            //Temperature
             total = 0.0;
             weightSum = 0.0;
 
-            for (int i = 0; i < biomeLayerCount; i++)
+            for (int i = 0; i < temperatureLayerCount; i++)
             {
-                noise = ZoomablePerlinNoise3Seed(biomeLayers[i].zoom, biomeLayers[i].variation, nx + 1, ny + 1, 0, 0, 0, 0, seed); // From -0.5 to 0.5
-                total += noise * biomeLayers[i].weight;
-                weightSum += biomeLayers[i].weight;
+                noise = ZoomablePerlinNoise3Seed(temperatureLayers[i].zoom, 0, nx + 1 + temperatureLayers[i].variation, ny + 1 + temperatureLayers[i].variation, 0, 0, 0, 0, seed); // From -0.5 to 0.5
+                total += noise * temperatureLayers[i].weight;
+                weightSum += temperatureLayers[i].weight;
             }
 
-            if (biomeValues)
-                biomeValues[y * info->width + x] = total / weightSum;
+            if (temperatureValues)
+                temperatureValues[y * info->width + x] = total / weightSum;
+
+            if (info->assurePercentages && sortedTemperatureValues)
+                sortedTemperatureValues[y * info->width + x] = total / weightSum;
         }
     }
 
-    float waterThreshold = 0.f;
-    float beachThreshhold = 0.f;
-    if (info->assurePercentages && sortValues)
+    float lowElevationThreshold = 0.f;
+    float midElevationThreshold = 0.f;
+    float lowTempThreshold = 0.f;
+    float midTempThreshold = 0.f;
+    float beachThreshold = 0.f;
+    if (info->assurePercentages && sortedElevationValues)
     {
-        QuickSort(sortValues, 0, totalSamples - 1);
-        int waterSortPos = (int)(totalSamples * info->waterPercent / 100.0);
-        waterThreshold = sortValues[waterSortPos];
-        beachThreshhold = sortValues[(int)(waterSortPos + ((totalSamples - waterSortPos) * info->beachPercent / 100.0))];
+        QuickSort(sortedElevationValues, 0, totalSamples - 1);
+        int lowElevationSortPos = (int)(totalSamples * info->lowElevationPercent / 100.0);
+        lowElevationThreshold = sortedElevationValues[lowElevationSortPos];
+        midElevationThreshold = sortedElevationValues[(int)(lowElevationSortPos + ((totalSamples - lowElevationSortPos) * info->midElevationPercent / 100.0))];
+        beachThreshold = sortedElevationValues[(int)(lowElevationSortPos + ((totalSamples - lowElevationSortPos) * info->beachPercent / 100.0))];
+
+        QuickSort(sortedTemperatureValues, 0, totalSamples - 1);
+        int lowTemperatureSortPos = (int)(totalSamples * info->lowTempPercent / 100.0);
+        lowTempThreshold = sortedTemperatureValues[lowTemperatureSortPos];
+        midTempThreshold = sortedTemperatureValues[(int)(lowTemperatureSortPos + ((totalSamples - lowTemperatureSortPos) * info->midTempPercent / 100.0))];
     }
     else
     {
-        waterThreshold = (info->waterPercent / 100.f) -0.5f;
-        beachThreshhold = waterThreshold + (info->beachPercent / 100) * (0.5f - waterThreshold);
+        lowElevationThreshold = (info->lowElevationPercent / 100.f);
+        beachThreshold = lowElevationThreshold + (info->beachPercent / 100.f) * (1 - lowElevationThreshold);
+        lowElevationThreshold -= 0.5f;
+        beachThreshold -= 0.5f;
     }
 
     int waterTiles = 0, landTiles = 0;
@@ -111,138 +128,71 @@ void GenerateTopView2DWorld(WorldInfoTopView2D* info, int seed)
     {
         for (int x = 0; x < info->width; ++x)
         {
-            //assign biome based on values
-            if (biomeValues[y * info->width + x] < -0.10)
-            {
-                info->tiles[y * info->width + x].biomeId = 0;
-            }
-            if (biomeValues[y * info->width + x] < -0.40)
-            {
-                info->tiles[y * info->width + x].tileId = 4; //River
-            }
-            if (biomeValues[y * info->width + x] > -0.10 && biomeValues[y * info->width + x] < 0.10)
-            {
-                info->tiles[y * info->width + x].biomeId = 1;
-            }
-            if (biomeValues[y * info->width + x] > 0.10)
-            {
-                info->tiles[y * info->width + x].biomeId = 2;
-            }
+            BiomeTemperature temp = TEMP_LOW;
+            BiomeHeight elevation = ELEV_LOW;
 
-            if (values)
+            if (temperatureValues)
             {
-                if (values[y * info->width + x] > waterThreshold)
+                if (temperatureValues[y * info->width + x] > midTempThreshold)
                 {
-                    info->tiles[y * info->width + x].tileId = 1; //Land
-                    landTiles++;
+                    temp = TEMP_HIGH; //Mountain
+                }
+                if (temperatureValues[y * info->width + x] <= lowTempThreshold)
+                {
+                    temp = TEMP_LOW;
+                }
+                if (temperatureValues[y * info->width + x] > lowTempThreshold && temperatureValues[y * info->width + x] < midTempThreshold)
+                {
+                    temp = TEMP_MEDIUM;
+                }
+            }
 
-                    if (info->addBeach)
+            if (elevationValues)
+            {
+                if (elevationValues[y * info->width + x] > midElevationThreshold)
+                {
+                    elevation = ELEV_HIGH;
+                }
+                if (elevationValues[y * info->width + x] <= lowElevationThreshold)
+                {
+                    elevation = ELEV_LOW;
+                }
+                if (elevationValues[y * info->width + x] > lowElevationThreshold && elevationValues[y * info->width + x] < midElevationThreshold)
+                {
+                    elevation = ELEV_MEDIUM;
+                }
+            }
+
+            info->tiles[y * info->width + x].biomeId = info->biomes[elevation][temp].id;
+            info->tiles[y * info->width + x].tileId = info->biomes[elevation][temp].tileId;
+
+            if (elevationValues[y * info->width + x] > lowElevationThreshold && elevationValues[y * info->width + x] < beachThreshold)
+            {
+                if (info->addBeach)
+                {
+                    if (elevationValues[y * info->width + x] < beachThreshold)
                     {
-                        if (values[y * info->width + x] < beachThreshhold)
-                        {
-                            info->tiles[y * info->width + x].tileId = 3; //Beach
-                        }
+                        info->tiles[y * info->width + x].biomeId = 8; //Hardcoded
+                        info->tiles[y * info->width + x].tileId = 8; //Hardcoded
                     }
-
-                }
-                if (values[y * info->width + x] <= waterThreshold)
-                {
-                    info->tiles[y * info->width + x].tileId = 2; //Water
-                    waterTiles++;
                 }
             }
-
         }
     }
 
-    //srand(seed);
+    if(sortedElevationValues)
+        free(sortedElevationValues);
 
-    //for (int i = 0; i < 5; ++i)
-    //{
-    //    int x = RandomRange(0, info->width);
-    //    int y = RandomRange(0, info->height);
+    if(elevationValues)
+        free(elevationValues);
 
-    //    int rep = RandomRange(50, 100);
-
-    //    for (int j = 0; j < rep; ++j)
-    //    {
-    //        int width = ZoomablePerlinNoise3Seed(1, x, y, 0, 0, 0, 0, 0, seed);
-
-    //        if (width < 0)
-    //        {
-    //            width = (width - 1) * 2;
-    //        }
-    //        else
-    //        {
-    //            width = (width + 1) * 2;
-    //        }
-
-    //        
-    //        for (int yn = 0; yn < width; yn++) {
-    //            for (int xn = 0; xn < width; xn++) {
-    //                // Calculate distance from center
-    //                float distance = sqrt(pow((xn+x) - x, 2) + pow((yn +y) - y, 2));
-
-    //                // Check if point is inside the circle
-    //                if (distance <= 5) {
-    //                    info->tiles[(y + yn) * info->width + (x + xn)].tileId = 4; //River// Filled tile
-    //                }
-    //            }
-
-    //        }
-
-            /*
-            double scale = 0.05;
-
-            float dx = ZoomablePerlinNoise3Seed(1, x * scale, y * scale, 0, 0, 0, 0, 0, seed);
-            float dy = ZoomablePerlinNoise3Seed(1, x * scale  + 5, y * scale + 5, 0, 0, 0, 0, 0, seed);
-
-            // Normalize and scale the vector
-            float length = sqrt(dx * dx + dy * dy);
-            if (length > 0) {
-                dx /= length;
-                dy /= length;
-            }
-
-            if (dx < 0)
-            {
-                x += (dx - 1) * width;
-            }
-            else
-            {
-                x += (dx + 1) * width;
-            }
-            
-            if (dy < 0)
-            {
-                y += (dy - 1) * width;
-            }
-            else
-            {
-                y += (dy + 1) * width;
-            }
-            */
-        //}
-    //}
-
-    if(sortValues)
-        free(sortValues);
-
-    if(values)
-        free(values);
-
-    if (biomeValues)
-        free(biomeValues);
-
-    float finalWaterPercent = ((float)waterTiles / (float)(info->width * info->height))* 100.f;
+    if (temperatureValues)
+        free(temperatureValues);
 }
 
-void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome)
+void AddBiome(WorldInfoTopView2D* worldInfo, Biome biome, BiomeHeight height, BiomeTemperature temperature)
 {
-    assert(worldInfo->biomeCount < MAX_BIOMES); //Make sure you don't add more biomes than MAXBIOMES
-
-    worldInfo->biomes[worldInfo->biomeCount] = biome;
-    worldInfo->biomeCount++;
+    worldInfo->biomes[height][temperature] = biome;
 }
 
 void AllocateTiles(WorldInfoTopView2D* info)
@@ -299,8 +249,4 @@ void QuickSort(float arr[], int low, int high) // QuickSort function for floats
         QuickSort(arr, low, pi - 1);        // Sort left subarray
         QuickSort(arr, pi + 1, high);        // Sort right subarray
     }
-}
-
-int RandomRange(int min, int max) {
-    return rand() % (max - min + 1) + min;
 }
